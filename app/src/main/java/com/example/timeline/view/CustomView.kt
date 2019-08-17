@@ -1,5 +1,6 @@
 package com.example.timeline.view
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
@@ -8,8 +9,12 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
+import android.widget.Scroller
 import androidx.core.view.GestureDetectorCompat
-import java.nio.file.Files.size
+import androidx.dynamicanimation.animation.DynamicAnimation
+import androidx.dynamicanimation.animation.FlingAnimation
+import androidx.dynamicanimation.animation.FloatValueHolder
+import kotlin.math.absoluteValue
 
 
 class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
@@ -27,34 +32,59 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
     private val rect = Rect(20, 20, 40, 40)
     private val paint = Paint()
 
-    private var start = 0.0
-    private var stop = 0.0
-    private var translation = 10.0
-    private var scaleFactor = 1.0
-    private var ticksScale = 1.0
-
     private var arbitraryStart = 2000.0
     private var arbitraryEnd = 4000.0
 
+    private var scaleFactor = 1.0
+    private var ticksScale = 1.0
+
     private var lastArbitraryStart = 0.0
     private var lastArbitraryEnd = 0.0
-
+    private var displaced = 0.0
+    private var lastY = 0f
 
     private var gestureDetector: GestureDetectorCompat
     private var scaleGestureDetector: ScaleGestureDetector
 
+    private var mScroller: Scroller
+
+    private var yFling: FlingAnimation? = null
+
     init {
         paint.color = Color.CYAN
+        mScroller = Scroller(context)
         gestureDetector = GestureDetectorCompat(context, this)
         scaleGestureDetector = ScaleGestureDetector(context, this)
     }
 
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
-        ticks.onDraw(context, canvas!!, point, translation, ticksScale, height)
+
+        ticksScale = height / (arbitraryEnd - arbitraryStart)
+
+        ticks.onDraw(context, canvas!!, point, -arbitraryStart * ticksScale, ticksScale, height)
+
+
         canvas.drawRect(rect, paint)
     }
 
+
+    private fun createAnimation(
+        startValue: Float,
+        startVelocity: Float,
+        maxValue: Float,
+        minValue: Float
+    ): FlingAnimation {
+        return FlingAnimation(FloatValueHolder(startValue))
+            .setStartVelocity(startVelocity)
+            .setMinimumVisibleChange(DynamicAnimation.MIN_VISIBLE_CHANGE_PIXELS)
+            .setFriction(0.7f)
+    }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         gestureDetector.onTouchEvent(event)
@@ -66,23 +96,63 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
 
     }
 
+
     override fun onSingleTapUp(p0: MotionEvent?): Boolean {
         return true
     }
 
+    private fun stopAnimations() {
+        yFling?.cancel()
+        yFling = null
+    }
+
     override fun onDown(p0: MotionEvent?): Boolean {
+        stopAnimations()
+
         lastArbitraryStart = arbitraryStart
         lastArbitraryEnd = arbitraryEnd
         return true
     }
 
-    override fun onFling(p0: MotionEvent?, p1: MotionEvent?, p2: Float, p3: Float): Boolean {
+    private val yAnimationUpdate = DynamicAnimation.OnAnimationUpdateListener { animation, newY, velocity ->
+        displaced = (newY - lastY).toDouble()
+
+        lastY = newY
+
+        arbitraryStart -= displaced
+        arbitraryEnd -= displaced
+
+        Log.d(TAG, "velocity $velocity displaced: $displaced newY $newY")
+        rect.top += displaced.toInt()
+        invalidate()
+    }
+
+    private val yAnimationEnd = DynamicAnimation.OnAnimationEndListener { animation, canceled, _, velocity ->
+        if (!canceled && velocity.absoluteValue > 0) {
+            startYAnimation(-velocity)
+        }
+        if (canceled || !animation.isRunning()) {
+            lastY = 0f
+            displaced = 0.0
+        }
+    }
+
+    override fun onFling(e1: MotionEvent?, e2: MotionEvent?, vX: Float, vY: Float): Boolean {
+        startYAnimation(vY/2)
         return true
+    }
+
+    private fun startYAnimation(vY: Float) {
+        yFling = createAnimation(scrollY.toFloat(), vY, height.toFloat(), -height.toFloat()).apply {
+            addUpdateListener(yAnimationUpdate)
+            addEndListener(yAnimationEnd)
+            start()
+        }
     }
 
     override fun onScroll(p0: MotionEvent?, p1: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
 
-        if(isScaling) return false
+        if (isScaling) return false
 
         val scale = (lastArbitraryEnd - lastArbitraryStart) / height
 
@@ -90,17 +160,8 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
 
         val focalDiff = (lastArbitraryStart + p0?.y!! * scale) - focus
 
-
-        start  = (lastArbitraryStart)  + focalDiff
-        stop = (lastArbitraryEnd )  + focalDiff
-
-        val scale1 = height / (stop - start)
-
-
-        arbitraryStart = start
-        arbitraryEnd = stop
-
-        translation = (- start * scale1)
+        arbitraryStart = (lastArbitraryStart) + focalDiff
+        arbitraryEnd = (lastArbitraryEnd) + focalDiff
 
         invalidate()
 
@@ -114,13 +175,10 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
 
     //scaling
     override fun onScaleBegin(p0: ScaleGestureDetector?): Boolean {
-        Log.d("scaleBegin", p0?.scaleFactor?.toString())
-
         isScaling = true
         scaleFactor = p0?.scaleFactor?.toDouble() ?: 1.0
-
-        lastArbitraryStart = start
-        lastArbitraryEnd = stop
+        lastArbitraryStart = arbitraryStart
+        lastArbitraryEnd = arbitraryEnd
         return true
     }
 
@@ -135,27 +193,8 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
 
         val focalDiff = (lastArbitraryStart + p0.focusY * scale) - focus
 
-        Log.d(TAG, "focusY" + p0.focusY.toString())
-
-        start  = focus + (lastArbitraryStart - focus) / scaleFactor + focalDiff
-        stop = focus + (lastArbitraryEnd - focus) / scaleFactor + focalDiff
-
-        val scale1 = height / (stop - start)
-
-        translation = (- start * scale1)
-
-        arbitraryStart = start
-        arbitraryEnd=stop
-
-        ticksScale = scale1
-//
-        Log.d(TAG,"tickScale:"+ scale1.toString())
-//        Log.d(TAG,"ticktranslation:"+ translation.toString())
-//        Log.d(TAG,"onscale Scale:"+ scale.toString())
-//        Log.d(TAG,"focus:"+ focus.toString())
-//        Log.d(TAG,"start:"+ start.toString())
-//        Log.d(TAG,"end"+ end.toString())
-//        Log.d(TAG,"foculdiff"+ focalDiff.toString())
+        arbitraryStart = focus + (lastArbitraryStart - focus) / scaleFactor + focalDiff
+        arbitraryEnd = focus + (lastArbitraryEnd - focus) / scaleFactor + focalDiff
 
         invalidate()
 
@@ -163,9 +202,9 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
     }
 
     override fun onScaleEnd(p0: ScaleGestureDetector?) {
+        lastArbitraryStart = arbitraryStart
+        lastArbitraryEnd = arbitraryEnd
         isScaling = false
-        Log.d("scaleStop", p0?.scaleFactor?.toString())
-
     }
 
 

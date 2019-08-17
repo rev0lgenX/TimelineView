@@ -20,12 +20,14 @@ class Ticks {
     //  static const double TickSize = 15.0;
     //  static const double SmallTickSize = 5.0;
 
+
+    private val TAG = Ticks::class.java.simpleName
     private val margin: Double = 20.0
     private val width: Double = 20.0
     private val labelPadLeft = 5.0
     private val labelPadRight = 1.0
-    private val tickDistance = 40
-    private val textTickDistance = 160
+    private val tickDistance = 30
+    private val textTickDistance = 120
     private val tickSize = 40
     private val smallTickSize = 20.0
     private val gutterWidth = 100
@@ -42,22 +44,24 @@ class Ticks {
 
         var scaledTickDistance = tickDist * scale
 
-//        if (scaledTickDistance > 2 * tickDistance) {
-//            while (scaledTickDistance > 2 * tickDistance && tickDist >= 2.0) {
-//                scaledTickDistance /= 2.0
-//                tickDist /= 2.0
-//                textTickDist /= 2.0
-//            }
-//        } else {
-//            while (scaledTickDistance < tickDistance) {
-//                scaledTickDistance *= 2.0
-//                tickDist *= 2.0
-//                textTickDist *= 2.0
-//            }
-//        }
+
+
+        if (scaledTickDistance > 2 * tickDistance) {
+            while (scaledTickDistance > 2 * tickDistance && tickDist >= 2.0) {
+                scaledTickDistance /= 2.0
+                tickDist /= 2.0
+                textTickDist /= 2.0
+            }
+        } else {
+            while (scaledTickDistance < tickDistance) {
+                scaledTickDistance *= 2.0
+                tickDist *= 2.0
+                textTickDist *= 2.0
+            }
+        }
+
 
         val numTicks = (ceil(height / scaledTickDistance) + 2).toInt()
-
 
         if (scaledTickDistance > textTickDistance) {
             textTickDist = tickDist
@@ -67,15 +71,11 @@ class Ticks {
         var startingTickMarkValue: Double
 
         val y = (translation - bottom) / scale
-
         startingTickMarkValue = y - (y % tickDist)
 
 
-        tickOffset = - (y % tickDistance) * scale - scaledTickDistance
-
+        tickOffset = - (scale * (y % tickDist) ) - scaledTickDistance
         tickOffset -= scaledTickDistance
-
-        Log.d("Ticks", startingTickMarkValue.toString())
 
         startingTickMarkValue -= tickDist
 
@@ -90,7 +90,6 @@ class Ticks {
             tickOffset += scaledTickDistance
 
             var tt = round(startingTickMarkValue)
-
             tt = -tt
 
             val o = floor(tickOffset)
@@ -107,7 +106,6 @@ class Ticks {
                 //textpaint
 
                 val value = abs(round(tt))
-
 
             } else {
                 /// If we're within two text-ticks, just draw a smaller line.
