@@ -3,7 +3,9 @@ package com.example.timeline.view
 import android.content.Context
 import kotlin.math.ceil
 import android.graphics.*
+import android.text.TextPaint
 import android.util.Log
+import com.example.timeline.view.data.Timeline
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.round
@@ -35,7 +37,7 @@ class Ticks {
 
     //  void paint(PaintingContext context, Offset offset, double translation,
     //      double scale, double height, Timeline timeline) {
-    fun onDraw(context:Context,canvas: Canvas, offset: Point, translation: Double, scale: Double, height: Int) {
+    fun onDraw(context:Context,canvas: Canvas, offset: Point, translation: Double, scale: Double, height: Int, timeline:Timeline?) {
 
         val bottom = height
 
@@ -43,7 +45,6 @@ class Ticks {
         var textTickDist = textTickDistance.toDouble()
 
         var scaledTickDistance = tickDist * scale
-
 
 
         if (scaledTickDistance > 2 * tickDistance) {
@@ -71,11 +72,22 @@ class Ticks {
         var startingTickMarkValue: Double
 
         val y = (translation - bottom) / scale
+
         startingTickMarkValue = y - (y % tickDist)
 
 
         tickOffset = - (scale * (y % tickDist) ) - scaledTickDistance
+
+        Log.d(TAG, "VALUEY $y")
+        Log.d(TAG, "(y % tickDist)  ${(y % tickDist)} ")
+
+        Log.d(TAG, "TICKOFFSET123123 $tickOffset")
+
+
+
         tickOffset -= scaledTickDistance
+
+        Log.d(TAG, "TICKOFFSET $tickOffset")
 
         startingTickMarkValue -= tickDist
 
@@ -85,6 +97,8 @@ class Ticks {
                 color = Color.argb(200, 67  , 174, 152)
             })
 
+
+
         for (i in 0 until numTicks) {
 
             tickOffset += scaledTickDistance
@@ -92,13 +106,13 @@ class Ticks {
             var tt = round(startingTickMarkValue)
             tt = -tt
 
-            val o = floor(tickOffset)
+            val flooredOffset = floor(tickOffset)
 
             if ((tt % textTickDist).toInt() == 0) {
                 canvas.drawRect(
                     Rect(
                         offset.x + gutterWidth - tickSize,
-                        (offset.y + height - o).toInt(), gutterWidth, (offset.y + height - o).toInt() + 2
+                        (offset.y + height - flooredOffset).toInt(), gutterWidth, (offset.y + height - flooredOffset).toInt() + 2
                     ),
 
                     Paint().apply { color = Color.WHITE })
@@ -107,11 +121,22 @@ class Ticks {
 
                 val value = abs(round(tt))
 
+                TextPaint().apply {
+                    textSize = 20f
+                    canvas.drawText(value.toString(), offset.x.toFloat(), (offset.y + height - flooredOffset - this.fontMetrics.descent - this.fontMetrics.ascent - 5).toFloat(), this)
+                }
+
+                //    canvas.drawParagraph(
+                //            tickParagraph,
+                //            Offset(offset.dx + LabelPadLeft - LabelPadRight,
+                //                offset.dy + height - o - tickParagraph.height - 5));
+
+
             } else {
                 /// If we're within two text-ticks, just draw a smaller line.
                 canvas.drawRect(
                     Rect((offset.x + gutterWidth - smallTickSize).toInt(),
-                        (offset.y + height - o).toInt(), gutterWidth, (offset.y + height - o).toInt() + 2),
+                        (offset.y + height - flooredOffset).toInt(), gutterWidth, (offset.y + height - flooredOffset).toInt() + 2),
                     Paint().apply { color = Color.WHITE })
             }
 

@@ -1,10 +1,8 @@
 package com.example.timeline.view
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -14,6 +12,7 @@ import androidx.core.view.GestureDetectorCompat
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
+import com.example.timeline.view.data.Timeline
 import kotlin.math.absoluteValue
 
 
@@ -22,6 +21,8 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
     , ScaleGestureDetector.OnScaleGestureListener {
 
 
+    private var lastFocalPoint: Float? = null
+    private var lastGestureDetector: ScaleGestureDetector? = null
     private val TAG = CustomView::class.java.simpleName
 
 
@@ -32,8 +33,8 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
     private val rect = Rect(20, 20, 40, 40)
     private val paint = Paint()
 
-    private var arbitraryStart = 2000.0
-    private var arbitraryEnd = 4000.0
+    private var arbitraryStart = 2018.0
+    private var arbitraryEnd = 4024.0
 
     private var scaleFactor = 1.0
     private var ticksScale = 1.0
@@ -49,6 +50,13 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
     private var mScroller: Scroller
 
     private var yFling: FlingAnimation? = null
+
+
+    var timeline: Timeline? = null
+        set(value) {
+            field = value
+            invalidate()
+        }
 
     init {
         paint.color = Color.CYAN
@@ -67,18 +75,16 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
 
         ticksScale = height / (arbitraryEnd - arbitraryStart)
 
-        ticks.onDraw(context, canvas!!, point, -arbitraryStart * ticksScale, ticksScale, height)
-
+        ticks.onDraw(context, canvas!!, point, -arbitraryStart * ticksScale, ticksScale, height, timeline)
 
         canvas.drawRect(rect, paint)
     }
 
 
+
     private fun createAnimation(
         startValue: Float,
-        startVelocity: Float,
-        maxValue: Float,
-        minValue: Float
+        startVelocity: Float
     ): FlingAnimation {
         return FlingAnimation(FloatValueHolder(startValue))
             .setStartVelocity(startVelocity)
@@ -122,7 +128,6 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
         arbitraryStart -= displaced
         arbitraryEnd -= displaced
 
-        Log.d(TAG, "velocity $velocity displaced: $displaced newY $newY")
         rect.top += displaced.toInt()
         invalidate()
     }
@@ -138,12 +143,12 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
     }
 
     override fun onFling(e1: MotionEvent?, e2: MotionEvent?, vX: Float, vY: Float): Boolean {
-        startYAnimation(vY/2)
+        startYAnimation(vY / 2)
         return true
     }
 
     private fun startYAnimation(vY: Float) {
-        yFling = createAnimation(scrollY.toFloat(), vY, height.toFloat(), -height.toFloat()).apply {
+        yFling = createAnimation(scrollY.toFloat(), vY).apply {
             addUpdateListener(yAnimationUpdate)
             addEndListener(yAnimationEnd)
             start()
@@ -177,6 +182,9 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
     override fun onScaleBegin(p0: ScaleGestureDetector?): Boolean {
         isScaling = true
         scaleFactor = p0?.scaleFactor?.toDouble() ?: 1.0
+
+        lastFocalPoint = p0?.focusY
+
         lastArbitraryStart = arbitraryStart
         lastArbitraryEnd = arbitraryEnd
         return true
@@ -192,6 +200,7 @@ class CustomView(context: Context, attr: AttributeSet) : View(context, attr)
         val focus = lastArbitraryStart + p0?.focusY?.times(scale)!!
 
         val focalDiff = (lastArbitraryStart + p0.focusY * scale) - focus
+
 
         arbitraryStart = focus + (lastArbitraryStart - focus) / scaleFactor + focalDiff
         arbitraryEnd = focus + (lastArbitraryEnd - focus) / scaleFactor + focalDiff
