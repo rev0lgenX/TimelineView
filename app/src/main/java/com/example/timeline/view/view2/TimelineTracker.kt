@@ -37,7 +37,6 @@ class TimelineTracker {
 
     fun expandTimelineType() {
         timelineScaleType = TimelineType.values()[timelineScaleType.ordinal + 1]
-        Log.d(TAG, "ARBIRA $arbitraryStart")
 
         when (timelineScaleType) {
             TimelineType.MONTH -> {
@@ -52,7 +51,7 @@ class TimelineTracker {
                     (ChronoUnit.DAYS.between(
                         startTime.toLocalDate(),
                         startTime.plusMonths((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
-                    ) * attrs?.longTickDistance!!).toDouble()
+                    ) * attrs?.longTickDistance!!).toDouble() - focalPoint
             }
         }
     }
@@ -86,7 +85,10 @@ class TimelineTracker {
                 TimelineType.MONTH -> it.plusMonths((i / attrs?.longTickDistance!!).toLong())?.let {
                     it.month.name + it.year.toString()
                 }
-                TimelineType.DAY -> it.plusDays((i / attrs?.longTickDistance!!).toLong()).dayOfMonth.toString()
+
+                TimelineType.DAY -> it.plusDays((i / attrs?.longTickDistance!!).toLong())?.let {
+                    it.dayOfMonth.toString() + it.month.name + it?.year.toString()
+                }
             }
         }
 

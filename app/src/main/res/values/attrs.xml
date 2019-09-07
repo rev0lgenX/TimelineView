@@ -5,5 +5,12 @@
         <attr name="longTickSize" format="dimension"/>
         <attr name="longTickDistance" format="dimension"/>
         <attr name="timelineWidth" format="dimension"/>
+        <attr name="timelineTextSize" format="dimension"/>
+        <attr name="gutterWidth" format="dimension"/>
+        <attr name="textSize" format="dimension"/>
+        <attr name="timelineTextColor" format="color"/>
+        <attr name="tickColor" format="color"/>
+        <attr name="textColor" format="color"/>
+        <attr name="gutterColor" format="color"/>
     </declare-styleable>
 </resources>

@@ -7,10 +7,12 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.round
 
-class TickWorker(listener: TickWorkerListener) {
+class TickWorker(listener: TickWorkerListener?) {
+
+    constructor():this(null)
 
     private val TAG = TickWorker::class.java.simpleName
-    private val mListener: TickWorkerListener = listener
+    private val mListener: TickWorkerListener? = listener
 
     fun work(
         canvas: Canvas?,
@@ -29,30 +31,30 @@ class TickWorker(listener: TickWorkerListener) {
             if (tracker.timelineScaleType == TimelineTracker.TimelineType.DAY) {
                 currentScale = 2.0
                 smallScaleTickDistance = (2.0 * attrs.shortTickDistance)
-                mListener.stopExpanding()
+                mListener?.stopExpanding()
             } else {
                 tracker.expandTimelineType()
-                mListener.onScaleReset()
+                mListener?.onScaleReset()
             }
         } else if (smallScaleTickDistance < 0.5 * attrs.shortTickDistance) {
             if (tracker.timelineScaleType == TimelineTracker.TimelineType.YEAR) {
                 currentScale = 0.5
                 smallScaleTickDistance = (0.5 * attrs.shortTickDistance)
-                mListener.stopContracting()
+                mListener?.stopContracting()
             } else {
                 tracker.collapseTimelineType()
-                mListener.onScaleReset()
+                mListener?.onScaleReset()
             }
         }
 
         val numTicks = (ceil(height / smallScaleTickDistance) + 2).toInt()
 
-        val gutterWidth = attrs.timelineWidth
+        val gutterWidth = attrs.gutterWidth
 
         canvas?.drawRect(
             Rect(offset.x, offset.y, gutterWidth, height),
             Paint().apply {
-                color = Color.argb(200, 67, 174, 152)
+                color = attrs.gutterColor
             })
 
         var tickOffset: Double
@@ -81,15 +83,13 @@ class TickWorker(listener: TickWorkerListener) {
                         offset.x + gutterWidth - attrs.longTickSize,
                         (offset.y + o).toInt(), gutterWidth, (offset.y + o).toInt() + 2
                     ),
-
-                    Paint().apply { color = Color.WHITE })
-
-                //textpaint
+                    Paint().apply { color = attrs.tickColor })
 
                 TextPaint().apply {
-                    textSize = 20f
+                    textSize = attrs.timelineTextSize.toFloat()
+                    color = attrs.timelineTextColor
                     canvas?.drawText(
-                        tracker.getTime(abs(tt))?:"",
+                        tracker.getTime(abs(tt)) ?: "",
 //                        abs(tt).toString(),
                         offset.x.toFloat(),
                         (offset.y + o + this.fontMetrics.descent - this.fontMetrics.ascent + 5).toFloat(),
@@ -104,7 +104,7 @@ class TickWorker(listener: TickWorkerListener) {
                         (offset.x + gutterWidth - attrs.shortTickSize),
                         (offset.y + o).toInt(), gutterWidth, (offset.y + o).toInt() + 2
                     ),
-                    Paint().apply { color = Color.WHITE })
+                    Paint().apply { color = attrs.tickColor })
             }
 
             startingTickMarkValue += attrs.shortTickDistance
