@@ -1,14 +1,19 @@
 package com.example.timeline
 
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import com.example.timeline.view.TimelineDateUtils
 import com.example.timeline.view.data.Timeline
 import com.example.timeline.view.data.TimelineInfo
+import com.example.timeline.view.view2.DateTime
+import com.example.timeline.view.view2.TimelineAsset
+import com.example.timeline.view.view2.TimelineEntry
 import com.example.timeline.view.view2.TimelineManager
 import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.android.synthetic.main.activity_main.*
+import net.danlew.android.joda.JodaTimeAndroid
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.ZoneId
 
@@ -19,28 +24,57 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         AndroidThreeTen.init(this)
+//        JodaTimeAndroid.init(this)
 
 
         val timeline = Timeline().apply {
             dob = 20190102
         }
 
-        val timelineInfo = mutableListOf<TimelineInfo>().apply {
-            add(
-                TimelineInfo(
-                    startDate = TimelineDateUtils(2018, 12, 12, 12, 12, 12),
-                    endDate = TimelineDateUtils(2019, 12, 12, 12, 12, 12),
-                    message = "marriage",
-                    resource = android.R.drawable.alert_dark_frame
-                )
-            )
+
+        val list = mutableListOf<TimelineAsset>()
+        list.add(
+            TimelineAsset(DateTime().apply {
+                dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault())!!
+            }, null, "I am born. ", Color.parseColor("#64dd17"), null)
+        )
+
+        list.add(
+            TimelineAsset(DateTime().apply {
+                dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(2)!!
+            }, DateTime().apply {
+                dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(4)!!
+            }, "Something is cooking. You can see it yourself in the future", Color.parseColor("#ff3d00"), null)
+        )
+
+        list.add(
+            TimelineAsset(DateTime().apply {
+                dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(6)!!
+            }, null, "I am noticed", Color.parseColor("#f57f17"), null)
+        )
+
+        list.add(
+            TimelineAsset(DateTime().apply {
+                dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(8)!!
+            }, DateTime().apply {
+                dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(15)!!
+            }, "This is the future mee I am the most successful app right now", Color.parseColor("#455a64"), null)
+        )
+
+        list.add(
+            TimelineAsset(DateTime().apply {
+                dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(20)!!
+            }, DateTime().apply {
+                dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(45)!!
+            }, "I am the one", Color.parseColor("#9d46ff"), null)
+        )
+
+
+        timelineView.manager = TimelineManager(this).apply {
+            timelineEntry = TimelineEntry().apply {
+                timelineAssets = list
+            }
         }
-
-        timeline.timelineInfo = timelineInfo
-
-//        customView.timeline = timeline
-
-        timelineView.manager = TimelineManager(this)
 
 
     }

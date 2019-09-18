@@ -1,5 +1,9 @@
 package com.example.timeline.view.view2
 
+import android.os.Build
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.util.Log
 import org.threeten.bp.ZonedDateTime
 import org.threeten.bp.temporal.ChronoUnit
@@ -19,11 +23,10 @@ class TimelineTracker {
     }
 
     var attrs: TimelineAttrs? = null
+
     var timelineEntry: TimelineEntry? = null
         set(value) {
-            if (value?.startTime?.dateTime == null) throw NullPointerException("TimelineEntry Null")
-
-            startTime = value.startTime?.dateTime!!
+            startTime = value?.startTime?.dateTime!!
             field = value
         }
 
@@ -78,25 +81,23 @@ class TimelineTracker {
     }
 
 
-    fun getTime(i: Double): String? =
+    fun getTime(i: Double): DateTime =
         startTime.let {
             when (timelineScaleType) {
-                TimelineType.YEAR -> it.plusYears((i / attrs?.longTickDistance!!).toLong()).year.toString()
-                TimelineType.MONTH -> it.plusMonths((i / attrs?.longTickDistance!!).toLong())?.let {
-                    it.month.name + it.year.toString()
-                }
-
-                TimelineType.DAY -> it.plusDays((i / attrs?.longTickDistance!!).toLong())?.let {
-                    it.dayOfMonth.toString() + it.month.name + it?.year.toString()
-                }
+                TimelineType.YEAR -> DateTime(it.plusYears((i / attrs?.longTickDistance!!).toLong()))
+                TimelineType.MONTH -> DateTime(it.plusMonths((i / attrs?.longTickDistance!!).toLong()))
+                TimelineType.DAY -> DateTime(it.plusDays((i / attrs?.longTickDistance!!).toLong()))
             }
         }
 
-    fun changeStartTime(i: Long): ZonedDateTime? = when (timelineScaleType) {
-        TimelineType.YEAR -> startTime.plusYears(i)
-        TimelineType.MONTH -> startTime.plusMonths(i)
-        TimelineType.DAY -> startTime.plusDays(i)
-    }
+    fun getTimeInText(i: Double): String? =
+        startTime.let {
+            when (timelineScaleType) {
+                TimelineType.YEAR -> it.plusYears((i / attrs?.longTickDistance!!).toLong()).year.toString()
+                TimelineType.MONTH -> it.plusMonths((i / attrs?.longTickDistance!!).toLong())?.month?.name?.substring(0, 3)
+                TimelineType.DAY -> it.plusDays((i / attrs?.longTickDistance!!).toLong())?.dayOfMonth?.toString()
+            }
+        }
 
 
 }

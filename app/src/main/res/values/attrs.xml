@@ -4,7 +4,6 @@
         <attr name="shortTickSize" format="dimension"/>
         <attr name="longTickSize" format="dimension"/>
         <attr name="longTickDistance" format="dimension"/>
-        <attr name="timelineWidth" format="dimension"/>
         <attr name="timelineTextSize" format="dimension"/>
         <attr name="gutterWidth" format="dimension"/>
         <attr name="textSize" format="dimension"/>

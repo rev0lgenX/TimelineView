@@ -18,7 +18,9 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:gutterColor="@color/gutterColor"
-            app:gutterWidth="50dp"
+            app:gutterWidth="40dp"
+            app:textSize="20sp"
+            app:timelineTextSize="10sp"
     />
 
 </LinearLayout>

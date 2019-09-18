@@ -33,6 +33,7 @@ dependencies {
     implementation 'androidx.dynamicanimation:dynamicanimation:1.0.0'
 
     implementation 'com.jakewharton.threetenabp:threetenabp:1.2.1'
+    implementation 'net.danlew:android.joda:2.10.3'
 
     testImplementation 'org.threeten:threetenbp:1.4.0'
 

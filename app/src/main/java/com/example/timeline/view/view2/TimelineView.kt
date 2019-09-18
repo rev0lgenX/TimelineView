@@ -1,21 +1,25 @@
 package com.example.timeline.view.view2
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Point
+import android.graphics.*
+import android.os.Build
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.example.timeline.R
 import java.lang.IllegalArgumentException
 import java.lang.NullPointerException
+import android.text.Layout
+
 
 class TimelineView(context: Context, private val attributeSet: AttributeSet?) : View(context, attributeSet) {
 
 
     private val TAG = TimelineView::class.java.simpleName
-    private var timelineAttrs: TimelineAttrs = TimelineAttrs()
+    private var timelineAttrs: TimelineAttrs = TimelineAttrs(context)
+    val rect = RectF()
 
     var manager: TimelineManager? = null
         set(value) {
@@ -47,7 +51,7 @@ class TimelineView(context: Context, private val attributeSet: AttributeSet?) : 
                             timelineTextSize =
                                 getDimensionPixelSize(R.styleable.Timeline_timelineTextSize, it.TIME_LINE_TEXT_SIZE)
                             textSize =
-                                getDimensionPixelSize(R.styleable.Timeline_textSize, it.TEXT_SIZE)
+                                getDimensionPixelSize(R.styleable.Timeline_textSize, it.TEXT_SIZE.toInt()).toFloat()
                             gutterWidth =
                                 getDimensionPixelSize(R.styleable.Timeline_gutterWidth, it.GUTTER_WIDTH)
                             gutterColor =
@@ -64,6 +68,7 @@ class TimelineView(context: Context, private val attributeSet: AttributeSet?) : 
                 }
             }
         }
+
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -73,8 +78,28 @@ class TimelineView(context: Context, private val attributeSet: AttributeSet?) : 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         if (manager == null) {
-            TickWorker().work(canvas, timelineAttrs, height, 1.0, Point(0,0), TimelineTracker())
+            TimelineWorker().work(context, canvas, timelineAttrs, height, 1.0,0.0, Point(0, 0), TimelineTracker())
         }
+
+//
+//        rect.left = 100f
+//        rect.right = 200f
+//        rect.top = 100f - 10f
+//        rect.bottom = rect.top + staticLayout.height + 10f
+//
+//        canvas?.drawRoundRect(
+//            rect,
+//            timelineAttrs.textRectCorner, timelineAttrs.textRectCorner, Paint().apply {
+//                color = Color.CYAN
+//            }
+//        )
+//
+//
+//        canvas?.save()
+//        canvas?.translate(150f, 150f)
+//        staticLayout.draw(canvas)
+//        canvas?.restore()
+
 
         manager!!.manage(canvas)
     }
@@ -84,4 +109,6 @@ class TimelineView(context: Context, private val attributeSet: AttributeSet?) : 
 
         return manager!!.onTouchEvent(event)
     }
+
+
 }

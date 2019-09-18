@@ -1,5 +1,7 @@
 package com.example.timeline.view.view2
 
+import org.threeten.bp.temporal.ChronoUnit
+
 
 //all entry info will go here
 class TimelineEntry {
@@ -7,9 +9,12 @@ class TimelineEntry {
         set(value) {
             if(value == null) throw NullPointerException("DateTime Null")
             endTime = DateTime().apply {
-                dateTime = value?.dateTime?.plusYears(120)!!
+                dateTime = value.dateTime.plusYears(120)!!
             }
             field = value
         }
     var endTime: DateTime? = null
+    var timelineAssets:List<TimelineAsset>? = null
+
+
 }
