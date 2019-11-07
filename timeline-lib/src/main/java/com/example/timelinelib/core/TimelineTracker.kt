@@ -1,5 +1,8 @@
-package com.example.timeline.view.view2
+package com.example.timelinelib.core
 
+import com.example.timelinelib.core.asset.TimelineEntry
+import com.example.timelinelib.core.util.DateTime
+import com.example.timelinelib.core.util.TimelineAttrs
 import org.threeten.bp.ZonedDateTime
 import org.threeten.bp.temporal.ChronoUnit
 

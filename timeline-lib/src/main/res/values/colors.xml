@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="tickColor">#ffffff</color>
+    <color name="gutterColor">#00FFFF</color>
+    <color name="timelineTextColor">#ffffff</color>
+    <color name="indicatorColor">#63C7BA</color>
+</resources>

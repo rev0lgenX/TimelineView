@@ -1,5 +1,6 @@
-package com.example.timeline.view.view2
+package com.example.timelinelib.core.asset
 
+import com.example.timelinelib.core.util.DateTime
 
 
 //all entry info will go here
@@ -14,6 +15,4 @@ class TimelineEntry {
         }
     var endTime: DateTime? = null
     var timelineAssets:List<TimelineAsset>? = null
-
-
 }

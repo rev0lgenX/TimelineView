@@ -56,6 +56,7 @@ class TimelineManager(private val context: Context) :
     private var gestureDetector: GestureDetectorCompat = GestureDetectorCompat(context, this).apply {
         setOnDoubleTapListener(this@TimelineManager)
     }
+
     private var scaleGestureDetector: ScaleGestureDetector = ScaleGestureDetector(context, this)
 
     private lateinit var scaleAnimator: ValueAnimator

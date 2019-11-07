@@ -3,17 +3,12 @@ package com.example.timeline
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import com.example.timeline.view.TimelineDateUtils
 import com.example.timeline.view.data.Timeline
-import com.example.timeline.view.data.TimelineInfo
-import com.example.timeline.view.view2.DateTime
-import com.example.timeline.view.view2.TimelineAsset
-import com.example.timeline.view.view2.TimelineEntry
-import com.example.timeline.view.view2.TimelineManager
+import com.example.timelinelib.core.asset.TimelineAsset
+import com.example.timelinelib.core.asset.TimelineEntry
+import com.example.timelinelib.core.util.DateTime
 import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.android.synthetic.main.activity_main.*
-import net.danlew.android.joda.JodaTimeAndroid
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.ZoneId
 
@@ -70,11 +65,11 @@ class MainActivity : AppCompatActivity() {
         )
 
 
-        timelineView.manager = TimelineManager(this).apply {
-            timelineEntry = TimelineEntry().apply {
+        timelineView.timelineEntry =
+            TimelineEntry().apply {
                 timelineAssets = list
             }
-        }
+
 
 
     }
