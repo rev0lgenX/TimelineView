@@ -15,6 +15,7 @@ data class TimelineAttrs(
     @ColorInt var tickColor: Int,
     @ColorInt var gutterColor: Int,
     @ColorInt  var timelineTextColor: Int,
+    @ColorInt var timelineTextBackgroundColor:Int,
     @ColorInt var indicatorColor:Int,
     var textRectCorner: Float = 8f
 )

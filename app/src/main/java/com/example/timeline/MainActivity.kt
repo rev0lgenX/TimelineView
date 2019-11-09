@@ -1,12 +1,13 @@
 package com.example.timeline
 
+import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.example.timeline.view.data.Timeline
 import com.example.timelinelib.core.asset.TimelineAsset
 import com.example.timelinelib.core.asset.TimelineEntry
 import com.example.timelinelib.core.util.DateTime
+import com.example.timelinelib.listener.TimelineAssetClickListener
 import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.android.synthetic.main.activity_main.*
 import org.threeten.bp.LocalDateTime
@@ -19,13 +20,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         AndroidThreeTen.init(this)
-//        JodaTimeAndroid.init(this)
-
-
-        val timeline = Timeline().apply {
-            dob = 20190102
-        }
-
 
         val list = mutableListOf<TimelineAsset>()
         list.add(
@@ -64,13 +58,27 @@ class MainActivity : AppCompatActivity() {
             }, "I am the one", Color.parseColor("#9d46ff"), null)
         )
 
+        list.add(
+            TimelineAsset(DateTime().apply {
+                dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(20)!!
+            }, DateTime().apply {
+                dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(45)!!
+            }, "I am above all")
+        )
 
         timelineView.timelineEntry =
             TimelineEntry().apply {
                 timelineAssets = list
             }
 
+        timelineView.timelineAssetClickListener = object :TimelineAssetClickListener{
+            override fun onAssetClick(asset: TimelineAsset) {
+                startActivity(Intent(this@MainActivity,AssetActivity::class.java).apply{
+                    putExtra("asset_data", AssetContainer(asset.id, asset.description!!))
+                })
+            }
 
-
+        }
     }
+
 }

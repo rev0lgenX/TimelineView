@@ -8,24 +8,27 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.round
 import android.util.DisplayMetrics
-import android.util.Log
+import android.view.MotionEvent
+import android.widget.Toast
 import com.example.timelinelib.R
 import com.example.timelinelib.core.asset.TimelineAsset
+import com.example.timelinelib.core.asset.TimelineAssetLocation
 import com.example.timelinelib.core.util.TimelineAttrs
 import com.example.timelinelib.core.util.convertDpToPixel
 import com.example.timelinelib.listener.OnAssetVisibleListener
 import com.example.timelinelib.listener.TickWorkerListener
 
 
+typealias AssetClickListener = ((TimelineAsset)->Unit)?
+
 class TimelineWorker(
-    context: Context,
+    var context: Context,
     tListener: TickWorkerListener?,
-    aListener: OnAssetVisibleListener?
+    aListener: OnAssetVisibleListener?,
+    var assetClickListener: AssetClickListener = null
 ) {
 
     private val TAG = TimelineWorker::class.java.simpleName
-
-
     private val paint = Paint()
     private val textPaint = TextPaint()
     private val rectF = RectF()
@@ -35,7 +38,20 @@ class TimelineWorker(
 
     private val indicatorHeight = context.resources.getDimension(R.dimen.indicatorHeight)
     private val indicatorWidth = context.resources.getDimension(R.dimen.indicatorWidth)
+    private val visibleAssetLocation = mutableListOf<TimelineAssetLocation>()
 
+
+    fun onSingleTap(event: MotionEvent) {
+        val x = event.x
+        val y = event.y
+
+        visibleAssetLocation.forEach {
+            if (it.rectF.contains(x, y)) {
+                assetClickListener?.invoke(it.asset)
+                return
+            }
+        }
+    }
 
     fun work(
         context: Context,
@@ -47,11 +63,10 @@ class TimelineWorker(
         offset: Point,
         tracker: TimelineTracker
     ) {
+        visibleAssetLocation.clear()
         var currentScale = scale
-
         var smallScaleTickDistance = attrs.shortTickDistance * currentScale
 
-        Log.d(TAG, "$smallScaleTickDistance long distance ${attrs.longTickDistance} sort distance ${attrs.shortTickDistance}")
 
         if (smallScaleTickDistance >= 2 * attrs.shortTickDistance) {
             if (tracker.timelineScaleType == TimelineTracker.TimelineType.DAY) {
@@ -106,9 +121,13 @@ class TimelineWorker(
             paint.reset()
             when (tracker.timelineScaleType) {
                 TimelineTracker.TimelineType.YEAR -> {
-                    it.yearStartTracker = it.yearStartPosition?.minus(startingTickMarkValue)
-                    it.yearEndTracker = it.yearEndPosition?.minus(startingTickMarkValue)
+
+                    it.yearStartTracker =
+                        it.yearStartPosition?.minus(startingTickMarkValue)?.toInt()
+                    it.yearEndTracker = it.yearEndPosition?.minus(startingTickMarkValue)?.toInt()
+
                     indicator(
+                        it,
                         it.yearStartTracker,
                         it.yearEndTracker,
                         scale,
@@ -116,15 +135,17 @@ class TimelineWorker(
                         assetIndicatorLeft,
                         assetIndicatorRight,
                         canvas,
-                        it.backgroundColor,
+                        it.backgroundColor ?: attrs.timelineTextBackgroundColor,
                         smallScaleTickDistance.toFloat()
                     )
 
                 }
                 TimelineTracker.TimelineType.MONTH -> {
-                    it.monthStartTracker = it.monthStartPosition?.minus(startingTickMarkValue)
-                    it.monthEndTracker = it.monthEndPosition?.minus(startingTickMarkValue)
+                    it.monthStartTracker =
+                        it.monthStartPosition?.minus(startingTickMarkValue)?.toInt()
+                    it.monthEndTracker = it.monthEndPosition?.minus(startingTickMarkValue)?.toInt()
                     indicator(
+                        it,
                         it.monthStartTracker,
                         it.monthEndTracker,
                         scale,
@@ -132,14 +153,15 @@ class TimelineWorker(
                         assetIndicatorLeft,
                         assetIndicatorRight,
                         canvas,
-                        it.backgroundColor,
+                        it.backgroundColor ?: attrs.timelineTextBackgroundColor,
                         smallScaleTickDistance.toFloat()
                     )
                 }
                 TimelineTracker.TimelineType.DAY -> {
-                    it.dayStartTracker = it.dayStartPosition?.minus(startingTickMarkValue)
-                    it.dayEndTracker = it.dayEndPosition?.minus(startingTickMarkValue)
+                    it.dayStartTracker = it.dayStartPosition?.minus(startingTickMarkValue)?.toInt()
+                    it.dayEndTracker = it.dayEndPosition?.minus(startingTickMarkValue)?.toInt()
                     indicator(
+                        it,
                         it.dayStartTracker,
                         it.dayEndTracker,
                         scale,
@@ -147,7 +169,7 @@ class TimelineWorker(
                         assetIndicatorLeft,
                         assetIndicatorRight,
                         canvas,
-                        it.backgroundColor,
+                        it.backgroundColor ?: attrs.timelineTextBackgroundColor,
                         smallScaleTickDistance.toFloat()
                     )
                 }
@@ -172,8 +194,9 @@ class TimelineWorker(
 
                 tracker.timelineEntry?.timelineAssets?.forEach {
                     when (tracker.timelineScaleType) {
+
                         TimelineTracker.TimelineType.YEAR -> {
-                            if (it.yearStartPosition == abs(tt)) {
+                            if (it.yearStartPosition?.toDouble() == abs(tt)) {
                                 drawTextAsset(
                                     assetIndicatorRight,
                                     context,
@@ -185,8 +208,9 @@ class TimelineWorker(
                                 )
                             }
                         }
+
                         TimelineTracker.TimelineType.MONTH -> {
-                            if (it.monthStartPosition == abs(tt)) {
+                            if (it.monthStartPosition?.toDouble() == abs(tt)) {
                                 drawTextAsset(
                                     assetIndicatorRight,
                                     context,
@@ -198,8 +222,9 @@ class TimelineWorker(
                                 )
                             }
                         }
+
                         TimelineTracker.TimelineType.DAY -> {
-                            if (it.dayStartPosition == abs(tt)) {
+                            if (it.dayStartPosition?.toDouble() == abs(tt)) {
                                 drawTextAsset(
                                     assetIndicatorRight,
                                     context,
@@ -272,7 +297,7 @@ class TimelineWorker(
     private fun drawTextAsset(
         assetIndicatorRight: Float,
         context: Context,
-        it: TimelineAsset,
+        asset: TimelineAsset,
         o: Double,
         springDisplacement: Double,
         canvas: Canvas?,
@@ -281,36 +306,37 @@ class TimelineWorker(
         paint.reset()
 
         rectF.apply {
-            left = assetIndicatorRight + convertDpToPixel(10f, context)
-            right = left + it.staticLayout?.width!! + 30f
-
-            top = ((o - 10 - (it.staticLayout?.height?.div(2)
-                ?: 0)) + springDisplacement).toFloat()
-            bottom = ((o + 10 + (it.staticLayout?.height?.div(2)
-                ?: 0)) + springDisplacement).toFloat()
+            left = assetIndicatorRight + convertDpToPixel(10f, context) + asset.paddingLeft
+            right = left + asset.staticLayout?.width!! + 30f
+            top = ((o - 10 - asset.staticLayout?.height?.div(2)!!).plus(springDisplacement)).plus(
+                asset.paddingTop
+            ).toFloat()
+            bottom =
+                (top.plus(asset.staticLayout?.height!!).plus(springDisplacement).plus(10)).toFloat()
+//                ((o + 10 + (asset.staticLayout?.height?.div(2)
+//                ?: 0)) + springDisplacement).toFloat()
         }
 
-        canvas?.drawRoundRect(
-            rectF,
-            attrs.textRectCorner, attrs.textRectCorner, paint.apply {
-                color = it.backgroundColor
-            }
-        )
+
+        visibleAssetLocation.add(TimelineAssetLocation(RectF(rectF), asset))
+
+        canvas?.drawRoundRect(rectF, attrs.textRectCorner, attrs.textRectCorner, paint.apply {
+            color = asset.backgroundColor ?: attrs.timelineTextBackgroundColor
+        })
 
         canvas?.save()
-
         canvas?.translate(
             rectF.left + 20,
-            (springDisplacement + o - it.staticLayout?.height?.div(2)!!).toFloat()
+            (springDisplacement + o + asset.paddingTop - asset.staticLayout?.height?.div(2)!!).toFloat()
         )
-        it.staticLayout?.draw(canvas)
-
+        asset.staticLayout?.draw(canvas)
         canvas?.restore()
     }
 
     private fun indicator(
-        startTime: Double?,
-        endTime: Double?,
+        asset: TimelineAsset,
+        startTime: Int?,
+        endTime: Int?,
         scale: Double,
         tickOffset: Double,
         assetIndicatorLeft: Float,
@@ -320,14 +346,16 @@ class TimelineWorker(
         smallScaleTickDistance: Float
     ) {
         startTime?.let { start ->
+
             rectF.apply {
                 top = start.times(scale).toFloat() + tickOffset.toFloat() + smallScaleTickDistance
                 bottom = endTime?.times(scale)?.toFloat()?.plus(tickOffset.toFloat())?.plus(
                     smallScaleTickDistance
                 ) ?: top + indicatorHeight
-                left = assetIndicatorLeft
-                right = assetIndicatorRight
+                left = assetIndicatorLeft + asset.paddingLeft
+                right = assetIndicatorRight + asset.paddingLeft
             }
+
             canvas?.drawRoundRect(rectF, 10f, 10f, paint.apply {
                 color = backgroundColor
             })
@@ -343,7 +371,6 @@ class TimelineWorker(
         o: Double
     ) {
         val timeText = tracker.getTimeInText(abs(tt)) ?: ""
-
         textPaint.apply {
             reset()
             textSize = attrs.timelineTextSize.toFloat()

@@ -5,40 +5,40 @@ import android.text.StaticLayout
 import com.example.timelinelib.core.util.DateTime
 
 //event holder
-class TimelineAsset(start: DateTime?, end: DateTime?, description: String?, color: Int?, image: Int?) {
+class TimelineAsset(
+    start: DateTime?,
+    end: DateTime?,
+    var description: String?,
+    var backgroundColor: Int?= null,
+    var image: Int? = null
+) {
+    var id:Int = -1
+
     var eventStartDate: DateTime? = start
     var eventEndDate: DateTime? = end
-
     var staticLayout: StaticLayout? = null
 
-    var description: String? = description
+    var yearStartPosition: Int? = null
+    var monthStartPosition: Int? = null
+    var dayStartPosition: Int? = null
+
+    var yearEndPosition: Int? = null
+    var monthEndPosition: Int? = null
+    var dayEndPosition: Int? = null
 
 
-    var backgroundColor: Int = color ?: Color.YELLOW
-    var backgroundImage: Int = image ?: -1
-
-    var yearStartPosition: Double? = null
-
-    var monthStartPosition: Double? = null
-
-    var dayStartPosition: Double? = null
-
-    var yearEndPosition: Double? = null
-
-    var monthEndPosition: Double? = null
-
-    var dayEndPosition: Double? = null
+    var yearStartTracker: Int? = null
+    var yearEndTracker: Int? = null
 
 
+    var monthStartTracker: Int? = null
+    var monthEndTracker: Int? = null
 
-    var yearStartTracker: Double? = null
-    var yearEndTracker: Double? = null
+    var dayStartTracker: Int? = null
+    var dayEndTracker: Int? = null
 
-
-    var monthStartTracker: Double? = null
-    var monthEndTracker: Double? = null
-
-    var dayStartTracker: Double? = null
-    var dayEndTracker: Double? = null
-
+    var paddingLeft: Int = 0
+    var paddingRight: Int = 0
+    var paddingTop: Int = 0
+    var paddingBottom: Int = 0
 }

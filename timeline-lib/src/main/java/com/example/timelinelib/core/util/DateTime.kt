@@ -22,5 +22,4 @@ class DateTime() {
     fun month(): String = if (month < 0) "" else Month.values()[month].toString()
     fun day(): String = if (day < 0) "" else day.toString()
 
-
 }
