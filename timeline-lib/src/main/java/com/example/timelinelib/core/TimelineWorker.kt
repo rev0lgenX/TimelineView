@@ -9,7 +9,6 @@ import kotlin.math.floor
 import kotlin.math.round
 import android.util.DisplayMetrics
 import android.view.MotionEvent
-import android.widget.Toast
 import com.example.timelinelib.R
 import com.example.timelinelib.core.asset.TimelineAsset
 import com.example.timelinelib.core.asset.TimelineAssetLocation
@@ -38,7 +37,7 @@ class TimelineWorker(
 
     private val indicatorHeight = context.resources.getDimension(R.dimen.indicatorHeight)
     private val indicatorWidth = context.resources.getDimension(R.dimen.indicatorWidth)
-    private val visibleAssetLocation = mutableListOf<TimelineAssetLocation>()
+    private val visibleAssetLocation = mutableMapOf<Int,TimelineAssetLocation>()
 
 
     fun onSingleTap(event: MotionEvent) {
@@ -46,8 +45,8 @@ class TimelineWorker(
         val y = event.y
 
         visibleAssetLocation.forEach {
-            if (it.rectF.contains(x, y)) {
-                assetClickListener?.invoke(it.asset)
+            if (it.value.rectF.contains(x, y)) {
+                assetClickListener?.invoke(it.value.asset)
                 return
             }
         }
@@ -291,6 +290,7 @@ class TimelineWorker(
             }
         }
 
+        assetVisibleListener?.onAssetVisible(visibleAssetLocation)
 
     }
 
@@ -317,8 +317,7 @@ class TimelineWorker(
 //                ?: 0)) + springDisplacement).toFloat()
         }
 
-
-        visibleAssetLocation.add(TimelineAssetLocation(RectF(rectF), asset))
+        visibleAssetLocation[asset.id] = TimelineAssetLocation(RectF(rectF), asset)
 
         canvas?.drawRoundRect(rectF, attrs.textRectCorner, attrs.textRectCorner, paint.apply {
             color = asset.backgroundColor ?: attrs.timelineTextBackgroundColor

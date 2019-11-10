@@ -2,18 +2,18 @@ package com.example.timelinelib.core.asset
 
 import android.graphics.Color
 import android.text.StaticLayout
+import androidx.annotation.IdRes
 import com.example.timelinelib.core.util.DateTime
 
 //event holder
 class TimelineAsset(
+    var id:Int,
     start: DateTime?,
     end: DateTime?,
     var description: String?,
     var backgroundColor: Int?= null,
     var image: Int? = null
 ) {
-    var id:Int = -1
-
     var eventStartDate: DateTime? = start
     var eventEndDate: DateTime? = end
     var staticLayout: StaticLayout? = null

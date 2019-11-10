@@ -23,13 +23,13 @@ class MainActivity : AppCompatActivity() {
 
         val list = mutableListOf<TimelineAsset>()
         list.add(
-            TimelineAsset(DateTime().apply {
+            TimelineAsset(list.size,DateTime().apply {
                 dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault())!!
             }, null, "I am born. ", Color.parseColor("#64dd17"), null)
         )
 
         list.add(
-            TimelineAsset(DateTime().apply {
+            TimelineAsset(list.size,DateTime().apply {
                 dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(2)!!
             }, DateTime().apply {
                 dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(4)!!
@@ -37,13 +37,13 @@ class MainActivity : AppCompatActivity() {
         )
 
         list.add(
-            TimelineAsset(DateTime().apply {
+            TimelineAsset(list.size,DateTime().apply {
                 dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(6)!!
             }, null, "I am noticed", Color.parseColor("#f57f17"), null)
         )
 
         list.add(
-            TimelineAsset(DateTime().apply {
+            TimelineAsset(list.size,DateTime().apply {
                 dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(8)!!
             }, DateTime().apply {
                 dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(15)!!
@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         list.add(
-            TimelineAsset(DateTime().apply {
+            TimelineAsset(list.size,DateTime().apply {
                 dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(20)!!
             }, DateTime().apply {
                 dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(45)!!
@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         list.add(
-            TimelineAsset(DateTime().apply {
+            TimelineAsset(list.size,DateTime().apply {
                 dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(20)!!
             }, DateTime().apply {
                 dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).plusYears(45)!!
@@ -71,14 +71,14 @@ class MainActivity : AppCompatActivity() {
                 timelineAssets = list
             }
 
-        timelineView.timelineAssetClickListener = object :TimelineAssetClickListener{
-            override fun onAssetClick(asset: TimelineAsset) {
-                startActivity(Intent(this@MainActivity,AssetActivity::class.java).apply{
-                    putExtra("asset_data", AssetContainer(asset.id, asset.description!!))
-                })
-            }
+//        timelineView.timelineAssetClickListener = object :TimelineAssetClickListener{
+//            override fun onAssetClick(asset: TimelineAsset) {
+//                startActivity(Intent(this@MainActivity,AssetActivity::class.java).apply{
+//                    putExtra("asset_data", AssetContainer(asset.id, asset.description!!))
+//                })
+//            }
 
-        }
+//        }
     }
 
 }

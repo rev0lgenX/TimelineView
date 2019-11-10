@@ -20,7 +20,7 @@ import androidx.dynamicanimation.animation.*
 import com.example.timelinelib.R
 import com.example.timelinelib.core.TimelineTracker
 import com.example.timelinelib.core.TimelineWorker
-import com.example.timelinelib.core.asset.TimelineAsset
+import com.example.timelinelib.core.asset.TimelineAssetLocation
 import com.example.timelinelib.core.asset.TimelineEntry
 import com.example.timelinelib.core.util.TimelineAttrs
 import com.example.timelinelib.listener.OnAssetVisibleListener
@@ -29,7 +29,7 @@ import com.example.timelinelib.listener.TimelineAssetClickListener
 import org.threeten.bp.temporal.ChronoUnit
 import kotlin.math.absoluteValue
 
-open class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: Int = 0) :
+class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: Int = 0) :
     View(context, attributeSet, defStyle)
     , TickWorkerListener
     , OnAssetVisibleListener
@@ -40,6 +40,7 @@ open class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defSt
     private val TAG = TimelineRenderer::class.java.simpleName
 
     var timelineAssetClickListener:TimelineAssetClickListener? = null
+    var timelineAssetVisibleListener:OnAssetVisibleListener? = null
 
     private val timelineWorker = TimelineWorker(context, this, this){
         timelineAssetClickListener?.onAssetClick(it)
@@ -51,6 +52,7 @@ open class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defSt
             field = value
             timelineTracker.attrs = value
         }
+
 
 
     var timelineEntry: TimelineEntry? = null
@@ -212,16 +214,16 @@ open class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defSt
 
     constructor(context: Context, attributeSet: AttributeSet?) : this(context, attributeSet, 0) {
         attributeSet?.let {
-            context.theme.obtainStyledAttributes(it, R.styleable.TimelineRenderer, 0, 0).apply {
+            context.theme.obtainStyledAttributes(it, R.styleable.TimelineView, 0, 0).apply {
                 timelineAttrs = TimelineAttrs(
                     shortTickSize =
                     getDimensionPixelSize(
-                        R.styleable.TimelineRenderer_shortTickSize,
+                        R.styleable.TimelineView_shortTickSize,
                         context.resources.getDimension(R.dimen.shortTickSize).toInt()
                     ),
                     longTickSize =
                     getDimensionPixelSize(
-                        R.styleable.TimelineRenderer_longTickSize,
+                        R.styleable.TimelineView_longTickSize,
                         context.resources.getDimension(R.dimen.longTickSize).toInt()
                     ),
                     longTickDistance = 240,
@@ -237,46 +239,46 @@ open class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defSt
 
                     timelineTextSize =
                     getDimensionPixelSize(
-                        R.styleable.TimelineRenderer_timelineTextSize,
+                        R.styleable.TimelineView_timelineTextSize,
                         context.resources.getDimension(R.dimen.gutterTextSize).toInt()
                     ),
                     textSize =
                     getDimensionPixelSize(
-                        R.styleable.TimelineRenderer_textSize,
+                        R.styleable.TimelineView_textSize,
                         context.resources.getDimension(R.dimen.textSize).toInt()
                     ).toFloat(),
                     gutterWidth =
                     getDimensionPixelSize(
-                        R.styleable.TimelineRenderer_gutterWidth,
+                        R.styleable.TimelineView_gutterWidth,
                         context.resources.getDimension(R.dimen.gutterWidth).toInt()
                     ),
                     gutterColor =
                     getColor(
-                        R.styleable.TimelineRenderer_gutterColor,
+                        R.styleable.TimelineView_gutterColor,
                         ContextCompat.getColor(context, R.color.gutterColor)
                     ),
                     tickColor =
                     getColor(
-                        R.styleable.TimelineRenderer_tickColor,
+                        R.styleable.TimelineView_tickColor,
                         ContextCompat.getColor(context, R.color.tickColor)
 
                     ),
                     timelineTextColor =
                     getColor(
-                        R.styleable.TimelineRenderer_timelineTextColor,
+                        R.styleable.TimelineView_timelineTextColor,
                         ContextCompat.getColor(context, R.color.timelineTextColor)
 
                     ),
                     indicatorColor = getColor(
-                        R.styleable.TimelineRenderer_indicatorColor,
+                        R.styleable.TimelineView_indicatorColor,
                         ContextCompat.getColor(context, R.color.timelineTextColor)
                     ),
                     indicatorTextSize = getDimension(
-                        R.styleable.TimelineRenderer_indicatorTextSize,
+                        R.styleable.TimelineView_indicatorTextSize,
                         context.resources.getDimension(R.dimen.indicatorTextSize)
                     ),
                     timelineTextBackgroundColor = getColor(
-                        R.styleable.TimelineRenderer_timelineTextBackgroundColor,
+                        R.styleable.TimelineView_timelineTextBackgroundColor,
                         TypedValue().apply {
                             context.theme.resolveAttribute(R.attr.colorAccent, this, true)
                         }.data
@@ -292,7 +294,7 @@ open class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defSt
 
 
     override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
+            super.onDraw(canvas)
         timelineWorker.work(
             context,
             canvas,
@@ -317,9 +319,8 @@ open class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defSt
     }
 
 
-
-    override fun onAssetVisible(y: Double, asset: TimelineAsset) {
-
+    override fun onAssetVisible(assetLocation: MutableMap<Int,TimelineAssetLocation>) {
+        timelineAssetVisibleListener?.onAssetVisible(assetLocation)
     }
 
 

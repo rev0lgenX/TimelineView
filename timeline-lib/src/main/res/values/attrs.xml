@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="TimelineRenderer">
+    <declare-styleable name="TimelineView">
         <attr name="shortTickSize" format="dimension"/>
         <attr name="longTickSize" format="dimension"/>
         <attr name="timelineTextSize" format="dimension"/>
@@ -15,4 +15,7 @@
         <attr name="indicatorTextSize" format="dimension"/>
         <attr name="timelineTextBackgroundColor" format="color"/>
     </declare-styleable>
+
+
+    <item name="timelineRendererId" type="id"/>
 </resources>

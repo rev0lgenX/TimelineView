@@ -49,6 +49,16 @@ class ExampleUnitTest {
 
     }
 
+    @Test
+    fun testList(){
+        val a = arrayOf("a","b","c").toMutableList()
+        a.forEach {
+            if(it == "b")
+                a.remove(it)
+        }
+        print(a)
+    }
+
     fun RectF.contained(x: Float, y: Float): Boolean {
         return (left < right && top < bottom  // check for empty first
                 && x >= left && x < right && y >= top && y < bottom)

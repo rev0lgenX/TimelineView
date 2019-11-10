@@ -1,7 +1,7 @@
 package com.example.timelinelib.listener
 
-import com.example.timelinelib.core.asset.TimelineAsset
+import com.example.timelinelib.core.asset.TimelineAssetLocation
 
 interface OnAssetVisibleListener {
-    fun onAssetVisible(y:Double, asset: TimelineAsset)
+    fun onAssetVisible(assetLocation: MutableMap<Int,TimelineAssetLocation>)
 }
