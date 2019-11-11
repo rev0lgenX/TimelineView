@@ -345,7 +345,6 @@ class TimelineWorker(
         smallScaleTickDistance: Float
     ) {
         startTime?.let { start ->
-
             rectF.apply {
                 top = start.times(scale).toFloat() + tickOffset.toFloat() + smallScaleTickDistance
                 bottom = endTime?.times(scale)?.toFloat()?.plus(tickOffset.toFloat())?.plus(

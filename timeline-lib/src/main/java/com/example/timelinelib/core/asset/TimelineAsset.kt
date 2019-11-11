@@ -1,8 +1,6 @@
 package com.example.timelinelib.core.asset
 
-import android.graphics.Color
 import android.text.StaticLayout
-import androidx.annotation.IdRes
 import com.example.timelinelib.core.util.DateTime
 
 //event holder

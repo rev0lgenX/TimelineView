@@ -39,10 +39,10 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
     private val TAG = TimelineRenderer::class.java.simpleName
 
-    var timelineAssetClickListener:TimelineAssetClickListener? = null
-    var timelineAssetVisibleListener:OnAssetVisibleListener? = null
+    var timelineAssetClickListener: TimelineAssetClickListener? = null
+    var timelineAssetVisibleListener: OnAssetVisibleListener? = null
 
-    private val timelineWorker = TimelineWorker(context, this, this){
+    private val timelineWorker = TimelineWorker(context, this, this) {
         timelineAssetClickListener?.onAssetClick(it)
     }
 
@@ -52,8 +52,6 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
             field = value
             timelineTracker.attrs = value
         }
-
-
 
     var timelineEntry: TimelineEntry? = null
         set(value) {
@@ -161,7 +159,10 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                                     subasset.paddingLeft += indicatorWidth.plus(5).toInt()
                                 }
 
-                                if (IntRange(asset.yearStartPosition!!, asset.yearStartPosition?.plus(asset.staticLayout?.height!!)!!)
+                                if (IntRange(
+                                        asset.yearStartPosition!!,
+                                        asset.yearStartPosition?.plus(asset.staticLayout?.height!!)!!
+                                    )
                                         .contains(subasset.yearStartPosition)
                                 ) {
                                     subasset.paddingTop += asset.staticLayout?.height?.plus(20)!!
@@ -198,7 +199,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
     private var yFling: FlingAnimation? = null
     private var ySpring: SpringAnimation? = null
-
+    private var scrollToAnimation:ValueAnimator? = null
 
     private var gestureDetector: GestureDetectorCompat =
         GestureDetectorCompat(context, this).apply {
@@ -291,10 +292,8 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
     }
 
 
-
-
     override fun onDraw(canvas: Canvas?) {
-            super.onDraw(canvas)
+        super.onDraw(canvas)
         timelineWorker.work(
             context,
             canvas,
@@ -308,7 +307,6 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
     }
 
 
-
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         gestureDetector.onTouchEvent(event)
         scaleGestureDetector.onTouchEvent(event)
@@ -319,7 +317,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
     }
 
 
-    override fun onAssetVisible(assetLocation: MutableMap<Int,TimelineAssetLocation>) {
+    override fun onAssetVisible(assetLocation: MutableMap<Int, TimelineAssetLocation>) {
         timelineAssetVisibleListener?.onAssetVisible(assetLocation)
     }
 
@@ -370,6 +368,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
     override fun onDown(p0: MotionEvent?): Boolean {
         stopFlingAnimation()
+        stopScrollToAnimation()
         lastArbitraryStart = timelineTracker.arbitraryStart
         return true
     }
@@ -455,6 +454,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
             displaced = (newY - lastY).toDouble()
             lastY = newY
             timelineTracker.arbitraryStart -= displaced
+
             if (stopTimeline()) stopFlingAnimation()
 
             invalidate()
@@ -544,9 +544,36 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
         yFling = null
     }
 
+    private fun stopScrollToAnimation(){
+        scrollToAnimation?.cancel()
+        scrollToAnimation = null
+    }
+
     private fun stopSpringAnimation() {
         if (ySpring?.canSkipToEnd() == true) ySpring?.skipToEnd()
         ySpring = null
+    }
+
+    fun scrollToTimeline(id: Int) {
+        timelineEntry?.timelineAssets?.first { it.id == id }?.let { asset ->
+            scrollToAnimation = ValueAnimator.ofInt(0, asset.yearStartTracker?.times(currentScale)?.minus(height/2)?.toInt()!!).apply {
+                addUpdateListener { animation ->
+                    (animation.animatedValue as Int).let { value ->
+                        //                    if (isScaling) return
+
+                        timelineTracker.arbitraryStart = lastArbitraryStart + value.div(currentScale)
+
+                        if (timelineTracker.arbitraryStart <= 0) {
+                            timelineTracker.arbitraryStart = 0.0
+                        }
+
+                        invalidate()
+                    }
+                }
+                duration = 500
+                start()
+            }
+        }
     }
 
 }

@@ -71,14 +71,17 @@ class MainActivity : AppCompatActivity() {
                 timelineAssets = list
             }
 
-//        timelineView.timelineAssetClickListener = object :TimelineAssetClickListener{
-//            override fun onAssetClick(asset: TimelineAsset) {
+
+
+        timelineView.setOnAssetClickListener(object :TimelineAssetClickListener{
+            override fun onAssetClick(asset: TimelineAsset) {
 //                startActivity(Intent(this@MainActivity,AssetActivity::class.java).apply{
 //                    putExtra("asset_data", AssetContainer(asset.id, asset.description!!))
 //                })
-//            }
 
-//        }
+                timelineView.scrollToTimeline(2)
+            }
+        })
     }
 
 }

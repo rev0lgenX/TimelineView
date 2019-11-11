@@ -15,7 +15,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
     OnAssetVisibleListener {
 
     private val TAG = TimelineView::class.java.simpleName
-    //    private val currentVisibleAssets = mutableListOf<TimelineAssetLocation>()
+
     private val currentVisibleAssets = mutableMapOf<Int, TimelineAssetLocation>()
     private lateinit var tView: TimelineRenderer
     var timelineEntry: TimelineEntry? = null
@@ -24,9 +24,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
             tView.timelineEntry = value
         }
 
-
     constructor(context: Context) : this(context, null)
-
     constructor(context: Context, attributeSet: AttributeSet?) : this(context, attributeSet, 0) {
         tView = TimelineRenderer(context, attributeSet).apply {
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
@@ -34,31 +32,10 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
         tView.id = R.id.timelineRendererId
 
         addView(tView)
-//        addView(ImageView(context).apply {
-//            layoutParams = LayoutParams(200, 200).let {
-//                it.topMargin = 100
-//                it
-//            }
-//            setImageResource(android.R.drawable.alert_dark_frame)
-//            scaleType = ImageView.ScaleType.CENTER_CROP
-//
-//        })
-//
-//        tView.timelineAssetClickListener = object :TimelineAssetClickListener{
-//            override fun onAssetClick(asset: TimelineAsset) {
-//                (getChildAt(1).layoutParams as LayoutParams).let {
-//                    it.leftMargin = 100
-//                    getChildAt(1).requestLayout()
-//                }
-//                findViewById<TimelineRenderer>(R.id.timelineRendererId).bringToFront()
-//            }
-//        }
-
         tView.timelineAssetVisibleListener = this
     }
 
     override fun onAssetVisible(assetLocation: MutableMap<Int, TimelineAssetLocation>) {
-
         val removableAssets = mutableListOf<Int>()
         currentVisibleAssets.forEach {
             if (!assetLocation.containsKey(it.key)) {
@@ -102,10 +79,27 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
         findViewById<TimelineRenderer>(R.id.timelineRendererId).bringToFront()
     }
 
+
+    /**
+     * Provide asset assetId to scroll to the given asset position
+    * @params assetId
+    *
+     * */
+    fun scrollToTimeline(assetId:Int){
+        tView.scrollToTimeline(assetId)
+    }
+
+    /**
+     * Register callback to be invoked when timeline asset text is clicked.
+     * @param assetClickListener
+     */
     fun setOnAssetClickListener(assetClickListener: TimelineAssetClickListener) {
         tView.timelineAssetClickListener = assetClickListener
     }
 
+    /**
+     * Unregister assetClickListener callback
+     */
     fun removeAssetClickListener() {
         tView.timelineAssetClickListener = null
     }
