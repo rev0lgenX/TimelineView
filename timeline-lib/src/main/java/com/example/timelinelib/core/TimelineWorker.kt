@@ -247,8 +247,8 @@ class TimelineWorker(
 
         when {
             tracker.timelineScaleType == TimelineTracker.TimelineType.MONTH -> {
-                val topTime = tracker.getTime(y)
-                val bottomTime = tracker.getTime(yBottom)
+                val topTime = tracker.getTime(y)!!
+                val bottomTime = tracker.getTime(yBottom)!!
                 drawTopBottomText(
                     canvas,
                     0,
@@ -267,8 +267,8 @@ class TimelineWorker(
 
             tracker.timelineScaleType == TimelineTracker.TimelineType.DAY -> {
 
-                val topTime = tracker.getTime(y)
-                val bottomTime = tracker.getTime(yBottom)
+                val topTime = tracker.getTime(y)!!
+                val bottomTime = tracker.getTime(yBottom)!!
 
                 val topText = "${topTime.year()} ${topTime.month()}"
                 val bottomText = "${bottomTime.year()} ${bottomTime.month()}"
@@ -313,8 +313,6 @@ class TimelineWorker(
             ).toFloat()
             bottom =
                 (top.plus(asset.staticLayout?.height!!).plus(springDisplacement).plus(10)).toFloat()
-//                ((o + 10 + (asset.staticLayout?.height?.div(2)
-//                ?: 0)) + springDisplacement).toFloat()
         }
 
         visibleAssetLocation[asset.id] = TimelineAssetLocation(RectF(rectF), asset)
@@ -349,7 +347,7 @@ class TimelineWorker(
                 top = start.times(scale).toFloat() + tickOffset.toFloat() + smallScaleTickDistance
                 bottom = endTime?.times(scale)?.toFloat()?.plus(tickOffset.toFloat())?.plus(
                     smallScaleTickDistance
-                ) ?: top + indicatorHeight
+                )?.takeIf { it > top.plus(indicatorHeight) } ?: top + indicatorHeight
                 left = assetIndicatorLeft + asset.paddingLeft
                 right = assetIndicatorRight + asset.paddingLeft
             }

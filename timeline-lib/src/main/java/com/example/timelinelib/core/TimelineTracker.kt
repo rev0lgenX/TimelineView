@@ -33,7 +33,7 @@ class TimelineTracker {
     var focalDistance = 0.0
     var focalPoint = 0.0
 
-    lateinit var startTime: ZonedDateTime
+    var startTime: ZonedDateTime? =null
 
 
     fun expandTimelineType() {
@@ -43,15 +43,15 @@ class TimelineTracker {
             TimelineType.MONTH -> {
                 arbitraryStart =
                     (ChronoUnit.MONTHS.between(
-                        startTime.toLocalDate(),
-                        startTime.plusYears((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
+                        startTime?.toLocalDate(),
+                        startTime?.plusYears((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
                     ) * attrs?.longTickDistance!!).toDouble()
             }
             TimelineType.DAY -> {
                 arbitraryStart =
                     (ChronoUnit.DAYS.between(
-                        startTime.toLocalDate(),
-                        startTime.plusMonths((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
+                        startTime?.toLocalDate(),
+                        startTime?.plusMonths((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
                     ) * attrs?.longTickDistance!!).toDouble() - focalPoint
             }
         }
@@ -64,23 +64,23 @@ class TimelineTracker {
             TimelineType.YEAR -> {
                 arbitraryStart =
                     (ChronoUnit.YEARS.between(
-                        startTime.toLocalDate(),
-                        startTime.plusMonths((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
+                        startTime?.toLocalDate(),
+                        startTime?.plusMonths((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
                     ) * attrs?.longTickDistance!!).toDouble() - focalPoint
             }
             TimelineType.MONTH -> {
                 arbitraryStart =
                     (ChronoUnit.MONTHS.between(
-                        startTime.toLocalDate(),
-                        startTime.plusDays((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
+                        startTime?.toLocalDate(),
+                        startTime?.plusDays((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
                     ) * attrs?.longTickDistance!!).toDouble() - focalPoint
             }
         }
     }
 
 
-    fun getTime(i: Double): DateTime =
-        startTime.let {
+    fun getTime(i: Double): DateTime? =
+        startTime?.let {
             when (timelineScaleType) {
                 TimelineType.YEAR -> DateTime(it.plusYears((i / attrs?.longTickDistance!!).toLong()))
                 TimelineType.MONTH -> DateTime(it.plusMonths((i / attrs?.longTickDistance!!).toLong()))
@@ -89,7 +89,7 @@ class TimelineTracker {
         }
 
     fun getTimeInText(i: Double): String? =
-        startTime.let {
+        startTime?.let {
             when (timelineScaleType) {
                 TimelineType.YEAR -> it.plusYears((i / attrs?.longTickDistance!!).toLong()).year.toString()
                 TimelineType.MONTH -> it.plusMonths((i / attrs?.longTickDistance!!).toLong())?.month?.name?.substring(0, 3)
