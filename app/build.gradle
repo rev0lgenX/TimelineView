@@ -37,6 +37,8 @@ dependencies {
     implementation 'com.jakewharton.threetenabp:threetenabp:1.2.1'
     implementation 'net.danlew:android.joda:2.10.3'
 
+    implementation 'com.google.android.material:material:1.2.0-alpha02'
+
     testImplementation 'org.threeten:threetenbp:1.4.0'
 
 

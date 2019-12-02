@@ -1,25 +1,30 @@
 package com.example.timelinelib.core.util
 
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.Month
-import org.threeten.bp.ZoneId
-import org.threeten.bp.ZonedDateTime
+import org.threeten.bp.*
 
-class DateTime() {
-    var dateTime = LocalDateTime.now().atZone(ZoneId.systemDefault())!!
-    var year: Int = -1
-    var month: Int = -1
-    var day: Int = -1
+class DateTime(var years: Int, var months: Int, var days: Int) : Comparable<DateTime> {
 
-    constructor(zonedDateTime: ZonedDateTime) : this() {
-        this.dateTime = zonedDateTime
-        year = zonedDateTime.year
-        month = zonedDateTime.month.ordinal
-        day = zonedDateTime.dayOfMonth
+    var localDate: LocalDate = LocalDate.now()
+
+    init {
+        localDate = LocalDate.of(years, months, days)
     }
 
-    fun year(): String = if (year < 0) "" else year.toString()
-    fun month(): String = if (month < 0) "" else Month.values()[month].toString()
-    fun day(): String = if (day < 0) "" else day.toString()
 
+    constructor(localDate: LocalDate) : this(
+        localDate.year,
+        localDate.month.value,
+        localDate.dayOfMonth
+    ) {
+        this.localDate = localDate
+    }
+
+
+    fun year() = years.toString()
+    fun month() = Month.values()[months - 1]
+    fun day() = days
+
+    override fun compareTo(other: DateTime): Int {
+        return this.localDate.compareTo(other.localDate)
+    }
 }

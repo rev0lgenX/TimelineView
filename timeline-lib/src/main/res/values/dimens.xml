@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="longTickSize">18dp</dimen>
-    <dimen name="shortTickSize">6dp</dimen>
+    <dimen name="shortTickSize">5dp</dimen>
     <dimen name="longTickDistance">80dp</dimen>
     <dimen name="gutterTextSize">10sp</dimen>
 
     <dimen name="textSize">18sp</dimen>
-    <dimen name="gutterWidth">40dp</dimen>
+    <dimen name="gutterWidth">45dp</dimen>
     <dimen name="indicatorHeight">20dp</dimen>
-    <dimen name="indicatorWidth">8dp</dimen>
+    <dimen name="indicatorWidth">3dp</dimen>
+    <dimen name="indicatorPaddingLeft">8dp</dimen>
     <dimen name="indicatorTextSize">16sp</dimen>
     <dimen name="timelineTextWidth">200dp</dimen>
+    <dimen name="indicatorRadius">4dp</dimen>
+    <dimen name="textPadding">10dp</dimen>
+    <dimen name="textRectCorner">8dp</dimen>
 </resources>

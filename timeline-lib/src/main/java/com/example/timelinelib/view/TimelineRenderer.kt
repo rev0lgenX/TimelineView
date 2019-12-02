@@ -20,10 +20,11 @@ import androidx.dynamicanimation.animation.*
 import com.example.timelinelib.R
 import com.example.timelinelib.core.TimelineTracker
 import com.example.timelinelib.core.TimelineWorker
+import com.example.timelinelib.core.asset.TimelineAsset
 import com.example.timelinelib.core.asset.TimelineAssetLocation
 import com.example.timelinelib.core.asset.TimelineEntry
 import com.example.timelinelib.core.util.TimelineAttrs
-import com.example.timelinelib.listener.OnAssetVisibleListener
+import com.example.timelinelib.listener.OnAssetBehaviourListener
 import com.example.timelinelib.listener.TickWorkerListener
 import com.example.timelinelib.listener.TimelineAssetClickListener
 import org.threeten.bp.temporal.ChronoUnit
@@ -32,7 +33,7 @@ import kotlin.math.absoluteValue
 class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: Int = 0) :
     View(context, attributeSet, defStyle)
     , TickWorkerListener
-    , OnAssetVisibleListener
+    , OnAssetBehaviourListener
     , GestureDetector.OnGestureListener
     , GestureDetector.OnDoubleTapListener
     , ScaleGestureDetector.OnScaleGestureListener {
@@ -40,11 +41,23 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
     private val TAG = TimelineRenderer::class.java.simpleName
 
     var timelineAssetClickListener: TimelineAssetClickListener? = null
-    var timelineAssetVisibleListener: OnAssetVisibleListener? = null
+    var timelineAssetBehaviourListener: OnAssetBehaviourListener? = null
+
+    val assetAboveScreen: TimelineAsset?
+        get() {
+            return timelineWorker.assetAboveScreen
+        }
+
+    val assetBelowScreen: TimelineAsset?
+        get() {
+            return timelineWorker.assetBelowScreen
+        }
+
 
     private val timelineWorker = TimelineWorker(context, this, this) {
         timelineAssetClickListener?.onAssetClick(it)
     }
+
 
     private val timelineTracker = TimelineTracker()
     private var timelineAttrs: TimelineAttrs? = null
@@ -56,7 +69,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
     var timelineEntry: TimelineEntry? = null
         set(value) {
             field = value
-            if (value?.startTime?.dateTime == null) throw NullPointerException("TimelineEntry Null")
+            if (value?.startTime?.localDate == null) throw NullPointerException("TimelineEntry Null")
 
             timelineTracker.timelineEntry = value
 
@@ -66,47 +79,61 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
                 if (it.eventStartDate != null) {
                     it.yearStartPosition = ChronoUnit.YEARS.between(
-                        value.startTime?.dateTime, it.eventStartDate?.dateTime
+                        value.startTime?.localDate, it.eventStartDate?.localDate
                     ).let { diff ->
-                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+//                            .toInt()
+                        diff.times(timelineAttrs?.longTickDistance!!)
                             .toInt()
                     }
 
                     it.monthStartPosition = ChronoUnit.MONTHS.between(
-                        value.startTime?.dateTime?.withDayOfMonth(1),
-                        it.eventStartDate?.dateTime?.withDayOfMonth(1)
+                        value.startTime?.localDate?.withDayOfMonth(1),
+                        it.eventStartDate?.localDate?.withDayOfMonth(1)
                     ).let { diff ->
-                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+//                            .toInt()
+                        diff.times(timelineAttrs?.longTickDistance!!)
                             .toInt()
                     }
 
                     it.dayStartPosition = ChronoUnit.DAYS.between(
-                        value.startTime?.dateTime, it.eventStartDate?.dateTime
+                        value.startTime?.localDate, it.eventStartDate?.localDate
                     ).let { diff ->
-                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+//                            .toInt()
+                        diff.times(timelineAttrs?.longTickDistance!!)
                             .toInt()
                     }
+
                 }
 
                 if (it.eventEndDate != null) {
 
                     it.yearEndPosition = ChronoUnit.YEARS.between(
-                        value.startTime?.dateTime, it.eventEndDate?.dateTime
+                        value.startTime?.localDate, it.eventEndDate?.localDate
                     ).let { diff ->
-                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+//                            .toInt()
+                        diff.times(timelineAttrs?.longTickDistance!!)
                             .toInt()
                     }
+
                     it.monthEndPosition = ChronoUnit.MONTHS.between(
-                        value.startTime?.dateTime?.withDayOfMonth(1),
-                        it.eventEndDate?.dateTime?.withDayOfMonth(1)
+                        value.startTime?.localDate?.withDayOfMonth(1),
+                        it.eventEndDate?.localDate?.withDayOfMonth(1)
                     ).let { diff ->
-                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+//                            .toInt()
+                        diff.times(timelineAttrs?.longTickDistance!!)
                             .toInt()
                     }
                     it.dayEndPosition = ChronoUnit.DAYS.between(
-                        value.startTime?.dateTime, it.eventEndDate?.dateTime
+                        value.startTime?.localDate, it.eventEndDate?.localDate
                     ).let { diff ->
-                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
+//                            .toInt()
+                        diff.times(timelineAttrs?.longTickDistance!!)
                             .toInt()
                     }
                 }
@@ -144,6 +171,10 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
             }
 
             val indicatorWidth = context.resources.getDimension(R.dimen.indicatorWidth)
+            val indicatorRadius = context.resources.getDimension(R.dimen.indicatorRadius)
+            val textPadding = context.resources.getDimension(R.dimen.textPadding)
+
+            value.timelineAssets = value.timelineAssets?.sortedWith(compareBy { it.eventStartDate })
 
             value.timelineAssets?.forEachIndexed { index, asset ->
                 val idx = index + 1
@@ -156,25 +187,46 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                                         asset.yearEndPosition!!
                                     ).contains(subasset.yearStartPosition)
                                 ) {
-                                    subasset.paddingLeft += indicatorWidth.plus(5).toInt()
+                                    subasset.paddingLeft += indicatorWidth
+                                        .plus(indicatorRadius.times(2))
+                                        .toInt()
                                 }
 
                                 if (IntRange(
                                         asset.yearStartPosition!!,
-                                        asset.yearStartPosition?.plus(asset.staticLayout?.height!!)!!
+                                        asset.yearStartPosition?.plus(asset.staticLayout?.height!!)?.plus(
+                                            2 * textPadding
+                                        )?.toInt()!!
                                     )
                                         .contains(subasset.yearStartPosition)
                                 ) {
-                                    subasset.paddingTop += asset.staticLayout?.height?.plus(20)!!
+                                    subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.plus(
+                                        10
+                                    )?.toInt()!!
                                 }
+
                             } else {
+                                if (subasset.eventEndDate != null) {
+                                    if (IntRange(
+                                            subasset.yearStartPosition!!,
+                                            subasset.yearEndPosition!!
+                                        )
+                                            .contains(asset.yearStartPosition)
+                                    ) {
+                                        asset.paddingLeft += indicatorWidth
+                                            .plus(indicatorRadius.times(2))
+                                            .toInt()
+                                    }
+                                }
+
                                 if (asset.yearStartPosition == subasset.yearStartPosition) {
-                                    subasset.paddingLeft += indicatorWidth.toInt()
-                                    subasset.paddingTop += asset.staticLayout?.height!!
+                                    subasset.paddingLeft += indicatorWidth
+                                        .plus(indicatorRadius.times(2))
+                                        .toInt()
+                                    subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.toInt()!!
                                 }
                             }
                         }
-
                 }
             }
 
@@ -191,6 +243,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
 
     private var isScaling = false
+    private var isScrolling = false
     private var lastArbitraryStart = 0.0
 
     private var lastY = 0f
@@ -199,7 +252,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
     private var yFling: FlingAnimation? = null
     private var ySpring: SpringAnimation? = null
-    private var scrollToAnimation:ValueAnimator? = null
+    private var scrollToAnimation: ValueAnimator? = null
 
     private var gestureDetector: GestureDetectorCompat =
         GestureDetectorCompat(context, this).apply {
@@ -283,6 +336,10 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                         TypedValue().apply {
                             context.theme.resolveAttribute(R.attr.colorAccent, this, true)
                         }.data
+                    ),
+                    textRectCorner = getDimension(
+                        R.styleable.TimelineView_textRectCorner,
+                        context.resources.getDimension(R.dimen.textRectCorner)
                     )
                 )
                 recycle()
@@ -310,15 +367,35 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         gestureDetector.onTouchEvent(event)
         scaleGestureDetector.onTouchEvent(event)
+
         if (event?.action == MotionEvent.ACTION_UP) {
             isScaling = false
+            isScrolling = false
+            if (yFling == null)
+                showAssetAssistant()
         }
+
         return true
     }
 
 
+    fun isInMotion(): Boolean = yFling != null || isScaling
+
+    override fun showAssetAssistant() {
+        if (isScaling || yFling != null) {
+            return
+        }
+
+        timelineAssetBehaviourListener?.showAssetAssistant()
+    }
+
+    override fun hideAssetAssistant() {
+        timelineAssetBehaviourListener?.hideAssetAssistant()
+    }
+
+
     override fun onAssetVisible(assetLocation: MutableMap<Int, TimelineAssetLocation>) {
-        timelineAssetVisibleListener?.onAssetVisible(assetLocation)
+        timelineAssetBehaviourListener?.onAssetVisible(assetLocation)
     }
 
 
@@ -374,12 +451,16 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
     }
 
     override fun onFling(p0: MotionEvent?, p1: MotionEvent?, vX: Float, vY: Float): Boolean {
+        hideAssetAssistant()
         startYAnimation(vY / 2)
         return true
     }
 
     override fun onScroll(p0: MotionEvent?, p1: MotionEvent?, p2: Float, p3: Float): Boolean {
         if (isScaling) return true
+
+        isScrolling = true
+        hideAssetAssistant()
 
         val focalDiff = (p0?.y!! - p1?.y!!) / currentScale
 
@@ -400,6 +481,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
     override fun onScaleBegin(p0: ScaleGestureDetector?): Boolean {
         isScaling = true
+        hideAssetAssistant()
         lastFocalPoint = p0?.focusY
         lastArbitraryStart = timelineTracker.arbitraryStart
         tempScale = p0?.scaleFactor?.toDouble() ?: 1.0
@@ -410,6 +492,8 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
         currentScale = scaleFactor
     }
 
+    //pixel to number  divide by scale;
+    //number to pixel multiply by scale;
     override fun onScale(p0: ScaleGestureDetector?): Boolean {
         scaleFactor *= p0?.scaleFactor?.toDouble() ?: 1.0
         tempScale *= p0?.scaleFactor?.toDouble() ?: 1.0
@@ -425,6 +509,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
         timelineTracker.focalPoint = p0.focusY.toDouble()
 
         stopTimeline()
+
         invalidate()
         return true
     }
@@ -455,7 +540,9 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
             lastY = newY
             timelineTracker.arbitraryStart -= displaced
 
-            if (stopTimeline()) stopFlingAnimation()
+            if (stopTimeline()) {
+                stopFlingAnimation()
+            }
 
             invalidate()
         }
@@ -486,7 +573,6 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
             }
 
             if (canceled || !animation.isRunning()) {
-
                 ySpring =
                     createSpringAnimation(scrollY.toFloat(), displaced.div(2).toFloat()).apply {
                         addUpdateListener(ySpringAnimationUpdate)
@@ -496,6 +582,9 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
                 lastY = 0f
                 displaced = 0.0
+                yFling = null
+                lastArbitraryStart = timelineTracker.arbitraryStart
+                showAssetAssistant()
             }
         }
 
@@ -544,7 +633,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
         yFling = null
     }
 
-    private fun stopScrollToAnimation(){
+    private fun stopScrollToAnimation() {
         scrollToAnimation?.cancel()
         scrollToAnimation = null
     }
@@ -554,14 +643,19 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
         ySpring = null
     }
 
+
+    //TODO://CHANGE SCROLL TO MONTH AND DAY CURRENTLY ONLY ON YEAR
     fun scrollToTimeline(id: Int) {
         timelineEntry?.timelineAssets?.first { it.id == id }?.let { asset ->
-            scrollToAnimation = ValueAnimator.ofInt(0, asset.yearStartTracker?.times(currentScale)?.minus(height/2)?.toInt()!!).apply {
+            scrollToAnimation = ValueAnimator.ofInt(
+                0,
+                asset.yearStartTracker?.times(currentScale)?.minus(height / 2)?.toInt()!!
+            ).apply {
                 addUpdateListener { animation ->
                     (animation.animatedValue as Int).let { value ->
-                        //                    if (isScaling) return
 
-                        timelineTracker.arbitraryStart = lastArbitraryStart + value.div(currentScale)
+                        timelineTracker.arbitraryStart =
+                            lastArbitraryStart + value.div(currentScale)
 
                         if (timelineTracker.arbitraryStart <= 0) {
                             timelineTracker.arbitraryStart = 0.0
@@ -575,5 +669,6 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
             }
         }
     }
+
 
 }

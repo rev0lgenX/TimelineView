@@ -3,6 +3,7 @@ package com.example.timelinelib.core
 import com.example.timelinelib.core.asset.TimelineEntry
 import com.example.timelinelib.core.util.DateTime
 import com.example.timelinelib.core.util.TimelineAttrs
+import org.threeten.bp.LocalDate
 import org.threeten.bp.ZonedDateTime
 import org.threeten.bp.temporal.ChronoUnit
 
@@ -24,7 +25,7 @@ class TimelineTracker {
 
     var timelineEntry: TimelineEntry? = null
         set(value) {
-            startTime = value?.startTime?.dateTime!!
+            startTime = value?.startTime?.localDate!!
             field = value
         }
 
@@ -33,7 +34,7 @@ class TimelineTracker {
     var focalDistance = 0.0
     var focalPoint = 0.0
 
-    var startTime: ZonedDateTime? =null
+    var startTime: LocalDate? =null
 
 
     fun expandTimelineType() {
@@ -43,15 +44,15 @@ class TimelineTracker {
             TimelineType.MONTH -> {
                 arbitraryStart =
                     (ChronoUnit.MONTHS.between(
-                        startTime?.toLocalDate(),
-                        startTime?.plusYears((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
+                        startTime,
+                        startTime?.plusYears((focalDistance / attrs?.longTickDistance!!).toLong())
                     ) * attrs?.longTickDistance!!).toDouble()
             }
             TimelineType.DAY -> {
                 arbitraryStart =
                     (ChronoUnit.DAYS.between(
-                        startTime?.toLocalDate(),
-                        startTime?.plusMonths((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
+                        startTime,
+                        startTime?.plusMonths((focalDistance / attrs?.longTickDistance!!).toLong())
                     ) * attrs?.longTickDistance!!).toDouble() - focalPoint
             }
         }
@@ -64,15 +65,15 @@ class TimelineTracker {
             TimelineType.YEAR -> {
                 arbitraryStart =
                     (ChronoUnit.YEARS.between(
-                        startTime?.toLocalDate(),
-                        startTime?.plusMonths((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
+                        startTime,
+                        startTime?.plusMonths((focalDistance / attrs?.longTickDistance!!).toLong())
                     ) * attrs?.longTickDistance!!).toDouble() - focalPoint
             }
             TimelineType.MONTH -> {
                 arbitraryStart =
                     (ChronoUnit.MONTHS.between(
-                        startTime?.toLocalDate(),
-                        startTime?.plusDays((focalDistance / attrs?.longTickDistance!!).toLong())?.toLocalDate()
+                        startTime,
+                        startTime?.plusDays((focalDistance / attrs?.longTickDistance!!).toLong())
                     ) * attrs?.longTickDistance!!).toDouble() - focalPoint
             }
         }

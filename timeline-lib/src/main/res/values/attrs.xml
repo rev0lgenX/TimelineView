@@ -5,6 +5,10 @@
         <attr name="longTickSize" format="dimension"/>
         <attr name="timelineTextSize" format="dimension"/>
         <attr name="longTickDistance" format="dimension"/>
+
+        <attr name="assistantPaddingTop" format="dimension"/>
+        <attr name="assistantPaddingBottom" format="dimension"/>
+
         <attr name="textSize" format="dimension"/>
         <attr name="tickColor" format="color"/>
         <attr name="textColor" format="color"/>
@@ -14,8 +18,17 @@
         <attr name="indicatorColor" format="color"/>
         <attr name="indicatorTextSize" format="dimension"/>
         <attr name="timelineTextBackgroundColor" format="color"/>
+        <attr name="textRectCorner" format="dimension"/>
     </declare-styleable>
 
+
+    <item name="upAssistantId" type="id"/>
+
+    <item name="upAssistantLayoutId" type="id"/>
+    <item name="upAssistantImageId" type="id"/>
+
+    <item name="downAssistantLayoutId" type="id"/>
+    <item name="downAssistantImageId" type="id"/>
 
     <item name="timelineRendererId" type="id"/>
 </resources>
