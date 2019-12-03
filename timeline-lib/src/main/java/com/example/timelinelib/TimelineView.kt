@@ -1,16 +1,24 @@
 package com.example.timelinelib
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.text.TextUtils
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
+import android.widget.TextView
 import androidx.appcompat.widget.AppCompatDrawableManager
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.*
 import com.example.timelinelib.adapter.TimelineImageAdapter
 import com.example.timelinelib.core.asset.TimelineAssetLocation
 import com.example.timelinelib.core.asset.TimelineEntry
+import com.example.timelinelib.core.util.convertDpToPixel
 import com.example.timelinelib.listener.OnAssetBehaviourListener
 import com.example.timelinelib.listener.TimelineAssetClickListener
 import com.example.timelinelib.view.TimelineRenderer
@@ -27,6 +35,9 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
     private lateinit var tView: TimelineRenderer
     private var assistantTopPadding = 0
     private var assistantBottomPadding = 0
+    private val indicatorColor = ContextCompat.getColor(context, R.color.indicatorColor)
+    private var downAssisAnimator: ViewPropertyAnimatorCompat? = null
+    private var upperAssisAnimator: ViewPropertyAnimatorCompat? = null
 
     var timelineImageAdapter: TimelineImageAdapter? = null
 
@@ -81,54 +92,93 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
         tView.assetAboveScreen?.let {
 
             findViewById<LinearLayout>(R.id.upAssistantLayoutId)?.let { upperAssis ->
+                if (upperAssis.visibility == View.VISIBLE) return
+
+                upperAssis.alpha = 0f
+                upperAssis.translationY = -100f
                 upperAssis.visibility = View.VISIBLE
-                upperAssis.setOnClickListener {_->
+                ViewCompat.animate(upperAssis)
+                    .translationY(0f)
+                    .alpha(1f)
+                    .setDuration(300)
+                    .start()
+
+                upperAssis.setOnClickListener { _ ->
                     scrollToTimeline(it.id)
                     hideAssetAssistant()
 
                 }
             }
+
+            findViewById<TextView>(R.id.upAssistantTextViewId)?.let { tv ->
+                tv.text = it.title ?: it.description ?: ""
+            }
         }
 
-
-//                addView(
-//                    getUpAssistantView().apply {
-//                        setOnClickListener { _ ->
-//                            scrollToTimeline(it.id)
-//                            hideAssetAssistant()
-//                        }
-//                    }
-//                )
-
         tView.assetBelowScreen?.let {
-//            if (findViewById<LinearLayout>(R.id.downAssistantLayoutId) == null) {
-                findViewById<LinearLayout>(R.id.downAssistantLayoutId)?.let { downAssis ->
-                    downAssis.visibility = View.VISIBLE
+            findViewById<LinearLayout>(R.id.downAssistantLayoutId)?.let { downAssis ->
+                if (downAssis.visibility == View.VISIBLE) return
+                downAssis.alpha = 0f
+                downAssis.visibility = View.VISIBLE
+                downAssis.translationY = 100f
 
-                    downAssis.setOnClickListener {_->
-                        scrollToTimeline(it.id)
-                        hideAssetAssistant()
-//
-                    }
+                ViewCompat.animate(downAssis)
+                    .translationY(0f)
+                    .alpha(1f)
+                    .setDuration(300)
+                    .start()
+
+                downAssis.setOnClickListener { _ ->
+                    scrollToTimeline(it.id)
+                    hideAssetAssistant()
                 }
-//                addView(
-//                    getDownAssistantView().let { lin ->
-//                        lin.setOnClickListener { _ ->
-//                            scrollToTimeline(it.id)
-//                            hideAssetAssistant()
-//                        }
-//                        lin
-//                    }
-//                )
+            }
 
+            findViewById<TextView>(R.id.downAssistantTextViewId)?.let { tv ->
+                tv.text = it.title ?: it.description ?: ""
+            }
         }
 
     }
 
 
     override fun hideAssetAssistant() {
-        findViewById<LinearLayout>(R.id.upAssistantLayoutId)?.visibility = View.GONE
-        findViewById<LinearLayout>(R.id.downAssistantLayoutId)?.visibility = View.GONE
+
+        findViewById<LinearLayout>(R.id.upAssistantLayoutId)?.let { upperAssis ->
+            upperAssis.visibility = View.GONE
+
+            //            upperAssisAnimator?.cancel()
+//
+//            if (upperAssis.visibility == View.GONE) return
+//
+//            upperAssisAnimator = ViewCompat.animate(upperAssis)
+//                .translationY(-100f)
+//                .alpha(0f)
+//                .setDuration(300)
+//                .withEndAction {
+//                    upperAssis.visibility = View.GONE
+//                }
+//
+//            upperAssisAnimator?.start()
+        }
+
+        findViewById<LinearLayout>(R.id.downAssistantLayoutId)?.let { downAssis ->
+            downAssis.visibility = View.GONE
+
+//            downAssisAnimator?.cancel()
+//
+//            if (downAssis.visibility == View.GONE) return
+//
+//            downAssisAnimator = ViewCompat.animate(downAssis)
+//                .translationY(100f)
+//                .alpha(0f)
+//                .setDuration(300)
+//                .withEndAction {
+//                    downAssis.visibility = View.GONE
+//                }
+//            downAssisAnimator?.start()
+
+        }
     }
 
     override fun onAssetVisible(assetLocation: MutableMap<Int, TimelineAssetLocation>) {
@@ -227,21 +277,48 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                 }
 
             lin.isClickable = true
+            lin.isFocusable = true
             lin.orientation = LinearLayout.VERTICAL
+
 
             FloatingActionButton(context).let { flo ->
                 flo.id = R.id.upAssistantImageId
                 flo.layoutParams =
-                    LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+                    LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+                        .apply {
+                            this.setMargins(50)
+                            this.gravity = Gravity.CENTER
+                        }
+
                 flo.size = FloatingActionButton.SIZE_MINI
-                flo.compatElevation = 0f
+                flo.compatElevation = 5f
                 flo.setImageDrawable(
                     AppCompatDrawableManager.get().getDrawable(
                         context,
                         R.drawable.ic_up_arrow
                     )
                 )
+                flo.supportBackgroundTintList = ColorStateList.valueOf(indicatorColor)
                 lin.addView(flo)
+
+            }
+
+            TextView(context).let { textView ->
+                textView.id = R.id.upAssistantTextViewId
+                textView.layoutParams =
+                    LinearLayout.LayoutParams(
+                        context.convertDpToPixel(200f).toInt(),
+                        LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        this.gravity = Gravity.CENTER
+                    }
+                textView.maxLines = 2
+                textView.typeface = ResourcesCompat.getFont(context, R.font.open_sans_semi_bold)
+                textView.textSize = 16f
+                textView.gravity = Gravity.CENTER
+                textView.ellipsize = TextUtils.TruncateAt.END
+                textView.setTextColor(indicatorColor)
+                lin.addView(textView)
             }
 
             lin
@@ -261,13 +338,36 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
             lin.isClickable = true
             lin.orientation = LinearLayout.VERTICAL
 
+            TextView(context).let { textView ->
+                textView.id = R.id.downAssistantTextViewId
+                textView.layoutParams =
+                    LinearLayout.LayoutParams(
+                        context.convertDpToPixel(200f).toInt(),
+                        LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        this.gravity = Gravity.CENTER
+                    }
+
+                textView.maxLines = 2
+                textView.typeface = ResourcesCompat.getFont(context, R.font.open_sans_semi_bold)
+                textView.textSize = 16f
+                textView.ellipsize = TextUtils.TruncateAt.END
+                textView.gravity = Gravity.CENTER
+                textView.setTextColor(indicatorColor)
+                lin.addView(textView)
+            }
+
             FloatingActionButton(context).let { flo ->
                 flo.id = R.id.downAssistantImageId
                 flo.layoutParams =
-                    LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+                    LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+                        .apply {
+                            this.setMargins(50)
+                            gravity = Gravity.CENTER
+                        }
                 flo.size = FloatingActionButton.SIZE_MINI
-                flo.compatElevation = 0f
-//                flo.isClickable = true
+                flo.compatElevation = 5f
+                flo.supportBackgroundTintList = ColorStateList.valueOf(indicatorColor)
                 flo.setImageDrawable(
                     AppCompatDrawableManager.get().getDrawable(
                         context,

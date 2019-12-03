@@ -3,5 +3,5 @@
     <color name="tickColor">#edf4fa</color>
     <color name="gutterColor">#D32972B1</color>
     <color name="timelineTextColor">#ffffff</color>
-    <color name="indicatorColor">#63C7BA</color>
+    <color name="indicatorColor">#D32972B1</color>
 </resources>

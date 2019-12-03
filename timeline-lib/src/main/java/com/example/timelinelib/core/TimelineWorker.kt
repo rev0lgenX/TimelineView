@@ -5,6 +5,7 @@ import android.graphics.*
 import android.text.TextPaint
 import android.util.DisplayMetrics
 import android.view.MotionEvent
+import androidx.core.content.res.ResourcesCompat
 import com.example.timelinelib.R
 import com.example.timelinelib.core.asset.TimelineAsset
 import com.example.timelinelib.core.asset.TimelineAssetLocation
@@ -110,10 +111,7 @@ class TimelineWorker(
 
 
         val y = tracker.arbitraryStart
-
         val yBottom = tracker.arbitraryStart + height / scale
-
-
         val dateTimeHintLeftPadding =
             5 * (context.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT) + gutterWidth
 
@@ -130,12 +128,9 @@ class TimelineWorker(
         assetBelowScreen = null
 
 
-
-        //TODO FOR MONTH AND DAY ABOVE AND BELOW ASSET
         tracker.timelineEntry?.timelineAssets?.forEach { asset ->
             paint.reset()
             when (tracker.timelineScaleType) {
-
                 TimelineTracker.TimelineType.YEAR -> {
                     asset.yearStartTracker =
                         asset.yearStartPosition?.minus(startingTickMarkValue)?.toInt()
@@ -507,6 +502,7 @@ class TimelineWorker(
             reset()
             textSize = indicatorTextSize
             color = Color.WHITE
+            this.typeface = ResourcesCompat.getFont(context, R.font.open_sans_semi_bold)
 
             val textHeight = fontMetrics.bottom - fontMetrics.top
 

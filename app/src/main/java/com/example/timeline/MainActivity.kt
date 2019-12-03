@@ -22,9 +22,15 @@ class MainActivity : AppCompatActivity() {
         val list = mutableListOf<TimelineAsset>()
         list.add(
             TimelineAsset(
-                list.size, DateTime(
-                    2020,12,24
-                ), null, "I am born. ", Color.parseColor("#64dd17"), image= android.R.drawable.menu_full_frame
+                list.size,
+                DateTime(
+                    2020, 12, 24
+                ),
+                null,
+                null,
+                "I am born. ",
+                Color.parseColor("#64dd17"),
+                image = android.R.drawable.menu_full_frame
             )
         )
 
@@ -34,6 +40,7 @@ class MainActivity : AppCompatActivity() {
 
                 DateTime(2019, 12, 1),
                 DateTime(2022, 12, 1),
+                null,
                 "Something is cooking. You can see it yourself in the future",
                 Color.parseColor("#ff3d00"),
                 android.R.drawable.menu_full_frame
@@ -44,17 +51,22 @@ class MainActivity : AppCompatActivity() {
             TimelineAsset(
                 list.size,
                 DateTime(
-                    2026,12,1
+                    2026, 12, 1
                 ),
-                null, "I am noticed", Color.parseColor("#f57f17"), android.R.drawable.menu_full_frame
+                null,
+                null,
+                "I am noticed",
+                Color.parseColor("#f57f17"),
+                android.R.drawable.menu_full_frame
             )
         )
 
         list.add(
             TimelineAsset(
                 list.size,
-                DateTime(2045,12,24),
-                DateTime(2055, 4,3),
+                DateTime(2045, 12, 24),
+                DateTime(2055, 4, 3),
+                null,
                 "This is the future mee I am the most successful app right now",
                 Color.parseColor("#455a64"),
                 android.R.drawable.menu_full_frame
@@ -64,8 +76,9 @@ class MainActivity : AppCompatActivity() {
         list.add(
             TimelineAsset(
                 list.size,
-                DateTime(2040, 5,17),
-                DateTime(2050, 6,16),
+                DateTime(2040, 5, 17),
+                DateTime(2050, 6, 16),
+                null,
                 "I am the one",
                 Color.parseColor("#9d46ff"),
                 android.R.drawable.menu_full_frame
@@ -75,8 +88,9 @@ class MainActivity : AppCompatActivity() {
         list.add(
             TimelineAsset(
                 list.size,
-                DateTime(2050, 8 ,18),
-                DateTime(2055, 6,16),
+                DateTime(2050, 8, 18),
+                DateTime(2055, 6, 16),
+                null,
                 "I am above all"
             )
         )

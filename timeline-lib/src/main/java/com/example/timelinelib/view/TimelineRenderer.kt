@@ -644,13 +644,31 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
     }
 
 
-    //TODO://CHANGE SCROLL TO MONTH AND DAY CURRENTLY ONLY ON YEAR
     fun scrollToTimeline(id: Int) {
         timelineEntry?.timelineAssets?.first { it.id == id }?.let { asset ->
-            scrollToAnimation = ValueAnimator.ofInt(
-                0,
-                asset.yearStartTracker?.times(currentScale)?.minus(height / 2)?.toInt()!!
-            ).apply {
+            when (timelineTracker.timelineScaleType) {
+                TimelineTracker.TimelineType.YEAR -> {
+                    scrollToAnimation = ValueAnimator.ofInt(
+                        0,
+                        asset.yearStartTracker?.times(currentScale)?.minus(height / 2)?.toInt()!!
+                    )
+                }
+                TimelineTracker.TimelineType.MONTH -> {
+                    scrollToAnimation = ValueAnimator.ofInt(
+                        0,
+                        asset.monthStartTracker?.times(currentScale)?.minus(height / 2)?.toInt()!!
+                    )
+                }
+                TimelineTracker.TimelineType.DAY -> {
+                    scrollToAnimation = ValueAnimator.ofInt(
+                        0,
+                        asset.dayStartTracker?.times(currentScale)?.minus(height / 2)?.toInt()!!
+                    )
+                }
+
+            }
+
+            scrollToAnimation?.apply {
                 addUpdateListener { animation ->
                     (animation.animatedValue as Int).let { value ->
 

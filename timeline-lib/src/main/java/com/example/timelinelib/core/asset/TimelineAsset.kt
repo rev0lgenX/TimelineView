@@ -8,6 +8,7 @@ class TimelineAsset(
     var id:Int,
     start: DateTime?,
     end: DateTime?,
+    var title:String?= null,
     var description: String?,
     var backgroundColor: Int?= null,
     var image: Int? = null

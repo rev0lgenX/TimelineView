@@ -26,9 +26,11 @@
 
     <item name="upAssistantLayoutId" type="id"/>
     <item name="upAssistantImageId" type="id"/>
+    <item name="upAssistantTextViewId" type="id"/>
 
     <item name="downAssistantLayoutId" type="id"/>
     <item name="downAssistantImageId" type="id"/>
+    <item name="downAssistantTextViewId" type="id"/>
 
     <item name="timelineRendererId" type="id"/>
 </resources>
