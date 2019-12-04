@@ -1,12 +1,15 @@
 package com.example.timelinelib
 
+import android.animation.LayoutTransition
 import android.content.Context
 import android.content.res.ColorStateList
 import android.text.TextUtils
 import android.util.AttributeSet
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AlphaAnimation
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
@@ -84,6 +87,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
         addView(getUpAssistantView().apply {
             this.visibility = View.GONE
         })
+
         addView(getDownAssistantView().apply {
             this.visibility = View.GONE
         })
@@ -103,6 +107,24 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                 findViewById<LinearLayout>(R.id.upAssistantLayoutId)?.let { upperAssis ->
                     if (upperAssis.visibility == View.VISIBLE) return@let
 
+
+//                    ImageView(context).apply {
+//                        layoutParams = LayoutParams(500, 500).let { param ->
+//                            param.addRule(CENTER_IN_PARENT)
+//                            param
+//                        }
+//                        this.setImageResource(android.R.drawable.ic_menu_report_image)
+//                        this.alpha = 0f
+//                        relativeLayout1.addView(this as View)
+//
+//                        ViewCompat.animate(this as View)
+//                            .alpha(1f)
+//                            .setDuration(1000)
+//                            .start()
+//
+//                    }
+
+
                     upperAssis.alpha = 0f
                     upperAssis.translationY = -100f
                     upperAssis.visibility = View.VISIBLE
@@ -115,8 +137,8 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                     upperAssis.setOnClickListener { _ ->
                         scrollToTimeline(it.id)
                         hideAssetAssistant()
-
                     }
+
                 }
 
                 findViewById<TextView>(R.id.upAssistantTextViewId)?.let { tv ->
@@ -171,9 +193,20 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
     override fun onAssetVisible(assetLocation: MutableMap<Int, TimelineAssetLocation>) {
         val removableAssets = mutableListOf<Int>()
 
+        var totalHeight = 0
+
         currentVisibleAssets.forEach {
             if (!assetLocation.containsKey(it.key)) {
-                findViewById<View>(it.key)?.let { relativeLayout1.removeView(it) }
+                findViewById<View>(it.key)?.let {
+
+                    ViewCompat.animate(it)
+                        .alpha(0f)
+                        .setDuration(100)
+                        .withEndAction {
+                            relativeLayout1.removeView(it)
+                        }.start()
+
+                }
                 removableAssets.add(it.key)
             }
         }
@@ -184,6 +217,8 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
 
         removableAssets.clear()
 
+
+        //TODO: SOLVE OVERLAPPING IMAGES
         assetLocation.forEach {
             if (currentVisibleAssets.containsKey(it.key)) {
                 findViewById<View>(it.key)?.let { iv ->
@@ -192,8 +227,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                 }
             } else {
                 currentVisibleAssets[it.key] = it.value
-
-                relativeLayout1.addView(
+                val imageLayout =
                     timelineImageAdapter?.getImageContainer(
                         it.value.asset.image ?: 0
                     )?.let { vi ->
@@ -218,14 +252,18 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                             it.value.asset.image?.let { iv.setImageResource(it) }
                             iv
                         }
-                    })
+                    }
+
+                imageLayout.alpha = 0f
+                relativeLayout1.addView(imageLayout)
+                ViewCompat.animate(imageLayout)
+                    .alpha(1f)
+                    .setDuration(100)
+                    .start()
             }
         }
 
         findViewById<TimelineRenderer>(R.id.timelineRendererId).bringToFront()
-
-//        findViewById<LinearLayout>(R.id.upAssistantLayoutId)?.bringToFront()
-//        findViewById<LinearLayout>(R.id.downAssistantLayoutId)?.bringToFront()
     }
 
 

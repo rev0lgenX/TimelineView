@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
                 null,
                 "I am born. ",
                 Color.parseColor("#64dd17"),
-                image = android.R.drawable.menu_full_frame
+                image = android.R.drawable.ic_menu_report_image
             )
         )
 
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
                 null,
                 "Something is cooking. You can see it yourself in the future",
                 Color.parseColor("#ff3d00"),
-                android.R.drawable.menu_full_frame
+                android.R.drawable.ic_menu_report_image
             )
         )
 
@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
                 null,
                 "I am noticed",
                 Color.parseColor("#f57f17"),
-                android.R.drawable.menu_full_frame
+                android.R.drawable.ic_menu_report_image
             )
         )
 
@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
                 null,
                 "This is the future mee I am the most successful app right now",
                 Color.parseColor("#455a64"),
-                android.R.drawable.menu_full_frame
+                android.R.drawable.ic_menu_report_image
             )
         )
 
@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
                 null,
                 "I am the one",
                 Color.parseColor("#9d46ff"),
-                android.R.drawable.menu_full_frame
+                android.R.drawable.ic_menu_report_image
             )
         )
 
