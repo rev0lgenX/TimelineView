@@ -36,8 +36,9 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
     private var assistantTopPadding = 0
     private var assistantBottomPadding = 0
     private val indicatorColor = ContextCompat.getColor(context, R.color.indicatorColor)
-    private var downAssisAnimator: ViewPropertyAnimatorCompat? = null
-    private var upperAssisAnimator: ViewPropertyAnimatorCompat? = null
+    private val animationVisibleTime = 200L
+
+    private lateinit var relativeLayout1: RelativeLayout
 
     var timelineImageAdapter: TimelineImageAdapter? = null
 
@@ -72,7 +73,14 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
         tView.id = R.id.timelineRendererId
         descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
         isDuplicateParentStateEnabled = true
-        addView(tView)
+
+        relativeLayout1 = RelativeLayout(context)
+        relativeLayout1.layoutParams =
+            LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+        relativeLayout1.addView(tView)
+
+        addView(relativeLayout1)
+
         addView(getUpAssistantView().apply {
             this.visibility = View.GONE
         })
@@ -89,96 +97,75 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
     override fun showAssetAssistant() {
         if (currentVisibleAssets.isNotEmpty()) return
 
-        tView.assetAboveScreen?.let {
+        handler.postDelayed({
+            tView.assetAboveScreen?.let {
 
-            findViewById<LinearLayout>(R.id.upAssistantLayoutId)?.let { upperAssis ->
-                if (upperAssis.visibility == View.VISIBLE) return
+                findViewById<LinearLayout>(R.id.upAssistantLayoutId)?.let { upperAssis ->
+                    if (upperAssis.visibility == View.VISIBLE) return@let
 
-                upperAssis.alpha = 0f
-                upperAssis.translationY = -100f
-                upperAssis.visibility = View.VISIBLE
-                ViewCompat.animate(upperAssis)
-                    .translationY(0f)
-                    .alpha(1f)
-                    .setDuration(300)
-                    .start()
+                    upperAssis.alpha = 0f
+                    upperAssis.translationY = -100f
+                    upperAssis.visibility = View.VISIBLE
+                    ViewCompat.animate(upperAssis)
+                        .translationY(0f)
+                        .alpha(1f)
+                        .setDuration(300)
+                        .start()
 
-                upperAssis.setOnClickListener { _ ->
-                    scrollToTimeline(it.id)
-                    hideAssetAssistant()
+                    upperAssis.setOnClickListener { _ ->
+                        scrollToTimeline(it.id)
+                        hideAssetAssistant()
 
+                    }
+                }
+
+                findViewById<TextView>(R.id.upAssistantTextViewId)?.let { tv ->
+                    tv.text = it.title ?: it.description ?: ""
                 }
             }
 
-            findViewById<TextView>(R.id.upAssistantTextViewId)?.let { tv ->
-                tv.text = it.title ?: it.description ?: ""
-            }
-        }
+            tView.assetBelowScreen?.let {
+                findViewById<LinearLayout>(R.id.downAssistantLayoutId)?.let { downAssis ->
+                    if (downAssis.visibility == View.VISIBLE) return@let
+                    downAssis.alpha = 0f
+                    downAssis.visibility = View.VISIBLE
+                    downAssis.translationY = 100f
 
-        tView.assetBelowScreen?.let {
-            findViewById<LinearLayout>(R.id.downAssistantLayoutId)?.let { downAssis ->
-                if (downAssis.visibility == View.VISIBLE) return
-                downAssis.alpha = 0f
-                downAssis.visibility = View.VISIBLE
-                downAssis.translationY = 100f
+                    ViewCompat.animate(downAssis)
+                        .translationY(0f)
+                        .alpha(1f)
+                        .setDuration(300)
+                        .start()
 
-                ViewCompat.animate(downAssis)
-                    .translationY(0f)
-                    .alpha(1f)
-                    .setDuration(300)
-                    .start()
+                    downAssis.setOnClickListener { _ ->
+                        scrollToTimeline(it.id)
+                        hideAssetAssistant()
+                    }
+                }
 
-                downAssis.setOnClickListener { _ ->
-                    scrollToTimeline(it.id)
-                    hideAssetAssistant()
+                findViewById<TextView>(R.id.downAssistantTextViewId)?.let { tv ->
+                    tv.text = it.title ?: it.description ?: ""
                 }
             }
 
-            findViewById<TextView>(R.id.downAssistantTextViewId)?.let { tv ->
-                tv.text = it.title ?: it.description ?: ""
-            }
-        }
+        }, animationVisibleTime)
+
 
     }
 
 
     override fun hideAssetAssistant() {
 
+        handler.removeCallbacksAndMessages(null)
+
         findViewById<LinearLayout>(R.id.upAssistantLayoutId)?.let { upperAssis ->
             upperAssis.visibility = View.GONE
-
-            //            upperAssisAnimator?.cancel()
-//
-//            if (upperAssis.visibility == View.GONE) return
-//
-//            upperAssisAnimator = ViewCompat.animate(upperAssis)
-//                .translationY(-100f)
-//                .alpha(0f)
-//                .setDuration(300)
-//                .withEndAction {
-//                    upperAssis.visibility = View.GONE
-//                }
-//
-//            upperAssisAnimator?.start()
         }
 
         findViewById<LinearLayout>(R.id.downAssistantLayoutId)?.let { downAssis ->
             downAssis.visibility = View.GONE
-
-//            downAssisAnimator?.cancel()
-//
-//            if (downAssis.visibility == View.GONE) return
-//
-//            downAssisAnimator = ViewCompat.animate(downAssis)
-//                .translationY(100f)
-//                .alpha(0f)
-//                .setDuration(300)
-//                .withEndAction {
-//                    downAssis.visibility = View.GONE
-//                }
-//            downAssisAnimator?.start()
-
         }
+
     }
 
     override fun onAssetVisible(assetLocation: MutableMap<Int, TimelineAssetLocation>) {
@@ -186,7 +173,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
 
         currentVisibleAssets.forEach {
             if (!assetLocation.containsKey(it.key)) {
-                findViewById<View>(it.key)?.let { removeView(it) }
+                findViewById<View>(it.key)?.let { relativeLayout1.removeView(it) }
                 removableAssets.add(it.key)
             }
         }
@@ -206,7 +193,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
             } else {
                 currentVisibleAssets[it.key] = it.value
 
-                addView(
+                relativeLayout1.addView(
                     timelineImageAdapter?.getImageContainer(
                         it.value.asset.image ?: 0
                     )?.let { vi ->
@@ -225,6 +212,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                                 params.leftMargin = width - params.width
                                 params
                             }
+
                             iv.scaleType = ImageView.ScaleType.CENTER_CROP
                             iv.id = it.value.asset.id
                             it.value.asset.image?.let { iv.setImageResource(it) }
@@ -236,8 +224,8 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
 
         findViewById<TimelineRenderer>(R.id.timelineRendererId).bringToFront()
 
-        findViewById<LinearLayout>(R.id.upAssistantLayoutId)?.bringToFront()
-        findViewById<LinearLayout>(R.id.downAssistantLayoutId)?.bringToFront()
+//        findViewById<LinearLayout>(R.id.upAssistantLayoutId)?.bringToFront()
+//        findViewById<LinearLayout>(R.id.downAssistantLayoutId)?.bringToFront()
     }
 
 
