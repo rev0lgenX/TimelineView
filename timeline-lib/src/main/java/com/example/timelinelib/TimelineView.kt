@@ -1,15 +1,12 @@
 package com.example.timelinelib
 
-import android.animation.LayoutTransition
 import android.content.Context
 import android.content.res.ColorStateList
 import android.text.TextUtils
 import android.util.AttributeSet
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AlphaAnimation
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
@@ -192,20 +189,10 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
 
     override fun onAssetVisible(assetLocation: MutableMap<Int, TimelineAssetLocation>) {
         val removableAssets = mutableListOf<Int>()
-
-        var totalHeight = 0
-
         currentVisibleAssets.forEach {
             if (!assetLocation.containsKey(it.key)) {
                 findViewById<View>(it.key)?.let {
-
-                    ViewCompat.animate(it)
-                        .alpha(0f)
-                        .setDuration(100)
-                        .withEndAction {
-                            relativeLayout1.removeView(it)
-                        }.start()
-
+                    relativeLayout1.removeView(it)
                 }
                 removableAssets.add(it.key)
             }
