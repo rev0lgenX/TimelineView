@@ -23,6 +23,8 @@ class TimelineEntry {
             endTime = DateTime(value.localDate.plusYears(120))
         }
 
+    var birthTime:DateTime? = null
+
     /**
      * ending of timeline
     */

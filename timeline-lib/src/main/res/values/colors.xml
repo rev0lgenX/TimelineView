@@ -4,4 +4,5 @@
     <color name="gutterColor">#D32972B1</color>
     <color name="timelineTextColor">#ffffff</color>
     <color name="indicatorColor">#D32972B1</color>
+    <color name="gutterShadowColor">#77272727</color>
 </resources>

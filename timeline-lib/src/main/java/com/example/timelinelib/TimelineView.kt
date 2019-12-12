@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.text.TextUtils
 import android.util.AttributeSet
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +26,8 @@ import com.example.timelinelib.view.TimelineRenderer
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 
+typealias OnAssetVisibleListener = ((MutableMap<Int, TimelineAssetLocation>) -> Unit)?
+
 class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int) :
     RelativeLayout(context, attributeSet, defStyle),
     OnAssetBehaviourListener {
@@ -37,10 +40,14 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
     private var assistantBottomPadding = 0
     private val indicatorColor = ContextCompat.getColor(context, R.color.indicatorColor)
     private val animationVisibleTime = 200L
+    private var childPosition = 0
+    private var childImage: View? = null
 
     private lateinit var relativeLayout1: RelativeLayout
 
     var timelineImageAdapter: TimelineImageAdapter? = null
+
+    var assetVisibleListener: OnAssetVisibleListener = null
 
     var timelineEntry: TimelineEntry? = null
         set(value) {
@@ -206,14 +213,18 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
 
 
         //TODO: SOLVE OVERLAPPING IMAGES
+
         assetLocation.forEach {
             if (currentVisibleAssets.containsKey(it.key)) {
                 findViewById<View>(it.key)?.let { iv ->
                     (iv.layoutParams as LayoutParams).topMargin = it.value.rectF.bottom.toInt() + 10
                     iv.requestLayout()
+                    iv
                 }
+
             } else {
                 currentVisibleAssets[it.key] = it.value
+
                 val imageLayout =
                     timelineImageAdapter?.getImageContainer(
                         it.value.asset.image ?: 0
@@ -226,15 +237,14 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                     } ?: let { _ ->
                         ImageView(context).let { iv ->
                             iv.layoutParams = LayoutParams(
-                                800,
-                                200
+                                context.convertDpToPixel(200f).toInt(),
+                                context.convertDpToPixel(180f).toInt()
                             ).let { params ->
                                 params.topMargin = it.value.rectF.bottom.toInt()
-                                params.leftMargin = width - params.width
+                                params.addRule(ALIGN_PARENT_END)
                                 params
                             }
-
-                            iv.scaleType = ImageView.ScaleType.CENTER_CROP
+                            iv.scaleType = ImageView.ScaleType.FIT_CENTER
                             iv.id = it.value.asset.id
                             it.value.asset.image?.let { iv.setImageResource(it) }
                             iv
@@ -243,6 +253,8 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
 
                 imageLayout.alpha = 0f
                 relativeLayout1.addView(imageLayout)
+
+                childImage = imageLayout
                 ViewCompat.animate(imageLayout)
                     .alpha(1f)
                     .setDuration(100)
@@ -250,6 +262,22 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
             }
         }
 
+        childPosition = 0
+
+        assetLocation.values.sortedWith(compareBy { it.rectF.top }).forEach {
+            findViewById<View>(it.asset.id)?.let { vi ->
+                if (childPosition == 0) childPosition = vi.top
+                
+                if (vi.top < childPosition) {
+                    vi.visibility = View.GONE
+                } else {
+                    vi.visibility = View.VISIBLE
+                    childPosition = vi.bottom
+                }
+            }
+        }
+
+        assetVisibleListener?.invoke(assetLocation)
         findViewById<TimelineRenderer>(R.id.timelineRendererId).bringToFront()
     }
 
@@ -280,118 +308,128 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
 
 
     private fun getUpAssistantView(): LinearLayout {
-        return LinearLayout(context).let { lin ->
-            lin.id = R.id.upAssistantLayoutId
-            lin.layoutParams =
-                LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
-                    addRule(ALIGN_PARENT_TOP)
-                    addRule(CENTER_HORIZONTAL)
-                    setMargins(0, 50 + assistantTopPadding, 0, 0)
+        return if (!isInEditMode) {
+            LinearLayout(context).let { lin ->
+                lin.id = R.id.upAssistantLayoutId
+                lin.layoutParams =
+                    LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                        addRule(ALIGN_PARENT_TOP)
+                        addRule(CENTER_HORIZONTAL)
+                        setMargins(0, 50 + assistantTopPadding, 0, 0)
+                    }
+
+                lin.isClickable = true
+                lin.isFocusable = true
+                lin.orientation = LinearLayout.VERTICAL
+
+
+                FloatingActionButton(context).let { flo ->
+                    flo.id = R.id.upAssistantImageId
+                    flo.layoutParams =
+                        LinearLayout.LayoutParams(
+                            LayoutParams.WRAP_CONTENT,
+                            LayoutParams.WRAP_CONTENT
+                        )
+                            .apply {
+                                this.setMargins(50)
+                                this.gravity = Gravity.CENTER
+                            }
+
+                    flo.size = FloatingActionButton.SIZE_MINI
+                    flo.compatElevation = 5f
+                    flo.setImageDrawable(
+                        AppCompatDrawableManager.get().getDrawable(
+                            context,
+                            R.drawable.ic_up_arrow
+                        )
+                    )
+                    flo.supportBackgroundTintList = ColorStateList.valueOf(indicatorColor)
+                    lin.addView(flo)
+
                 }
 
-            lin.isClickable = true
-            lin.isFocusable = true
-            lin.orientation = LinearLayout.VERTICAL
-
-
-            FloatingActionButton(context).let { flo ->
-                flo.id = R.id.upAssistantImageId
-                flo.layoutParams =
-                    LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-                        .apply {
-                            this.setMargins(50)
+                TextView(context).let { textView ->
+                    textView.id = R.id.upAssistantTextViewId
+                    textView.layoutParams =
+                        LinearLayout.LayoutParams(
+                            context.convertDpToPixel(200f).toInt(),
+                            LayoutParams.WRAP_CONTENT
+                        ).apply {
                             this.gravity = Gravity.CENTER
                         }
+                    textView.maxLines = 2
+                    textView.typeface = ResourcesCompat.getFont(context, R.font.open_sans_semi_bold)
+                    textView.textSize = 16f
+                    textView.gravity = Gravity.CENTER
+                    textView.ellipsize = TextUtils.TruncateAt.END
+                    textView.setTextColor(indicatorColor)
+                    lin.addView(textView)
+                }
 
-                flo.size = FloatingActionButton.SIZE_MINI
-                flo.compatElevation = 5f
-                flo.setImageDrawable(
-                    AppCompatDrawableManager.get().getDrawable(
-                        context,
-                        R.drawable.ic_up_arrow
-                    )
-                )
-                flo.supportBackgroundTintList = ColorStateList.valueOf(indicatorColor)
-                lin.addView(flo)
-
+                lin
             }
-
-            TextView(context).let { textView ->
-                textView.id = R.id.upAssistantTextViewId
-                textView.layoutParams =
-                    LinearLayout.LayoutParams(
-                        context.convertDpToPixel(200f).toInt(),
-                        LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        this.gravity = Gravity.CENTER
-                    }
-                textView.maxLines = 2
-                textView.typeface = ResourcesCompat.getFont(context, R.font.open_sans_semi_bold)
-                textView.textSize = 16f
-                textView.gravity = Gravity.CENTER
-                textView.ellipsize = TextUtils.TruncateAt.END
-                textView.setTextColor(indicatorColor)
-                lin.addView(textView)
-            }
-
-            lin
-        }
+        } else LinearLayout(context)
     }
 
 
     private fun getDownAssistantView(): LinearLayout {
-        return LinearLayout(context).let { lin ->
-            lin.id = R.id.downAssistantLayoutId
-            lin.layoutParams =
-                LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
-                    addRule(ALIGN_PARENT_BOTTOM)
-                    addRule(CENTER_HORIZONTAL)
-                    setMargins(0, 0, 0, 50 + assistantBottomPadding)
-                }
-            lin.isClickable = true
-            lin.orientation = LinearLayout.VERTICAL
-
-            TextView(context).let { textView ->
-                textView.id = R.id.downAssistantTextViewId
-                textView.layoutParams =
-                    LinearLayout.LayoutParams(
-                        context.convertDpToPixel(200f).toInt(),
-                        LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        this.gravity = Gravity.CENTER
+        return if (!isInEditMode) {
+            LinearLayout(context).let { lin ->
+                lin.id = R.id.downAssistantLayoutId
+                lin.layoutParams =
+                    LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                        addRule(ALIGN_PARENT_BOTTOM)
+                        addRule(CENTER_HORIZONTAL)
+                        setMargins(0, 0, 0, 50 + assistantBottomPadding)
                     }
+                lin.isClickable = true
+                lin.orientation = LinearLayout.VERTICAL
 
-                textView.maxLines = 2
-                textView.typeface = ResourcesCompat.getFont(context, R.font.open_sans_semi_bold)
-                textView.textSize = 16f
-                textView.ellipsize = TextUtils.TruncateAt.END
-                textView.gravity = Gravity.CENTER
-                textView.setTextColor(indicatorColor)
-                lin.addView(textView)
-            }
-
-            FloatingActionButton(context).let { flo ->
-                flo.id = R.id.downAssistantImageId
-                flo.layoutParams =
-                    LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-                        .apply {
-                            this.setMargins(50)
-                            gravity = Gravity.CENTER
+                TextView(context).let { textView ->
+                    textView.id = R.id.downAssistantTextViewId
+                    textView.layoutParams =
+                        LinearLayout.LayoutParams(
+                            context.convertDpToPixel(200f).toInt(),
+                            LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            this.gravity = Gravity.CENTER
                         }
-                flo.size = FloatingActionButton.SIZE_MINI
-                flo.compatElevation = 5f
-                flo.supportBackgroundTintList = ColorStateList.valueOf(indicatorColor)
-                flo.setImageDrawable(
-                    AppCompatDrawableManager.get().getDrawable(
-                        context,
-                        R.drawable.ic_down_arrow
-                    )
-                )
-                lin.addView(flo)
-            }
 
-            lin
-        }
+                    textView.maxLines = 2
+                    textView.typeface = ResourcesCompat.getFont(context, R.font.open_sans_semi_bold)
+                    textView.textSize = 16f
+                    textView.ellipsize = TextUtils.TruncateAt.END
+                    textView.gravity = Gravity.CENTER
+                    textView.setTextColor(indicatorColor)
+                    lin.addView(textView)
+                }
+
+                FloatingActionButton(context).let { flo ->
+                    flo.id = R.id.downAssistantImageId
+                    flo.layoutParams =
+                        LinearLayout.LayoutParams(
+                            LayoutParams.WRAP_CONTENT,
+                            LayoutParams.WRAP_CONTENT
+                        )
+                            .apply {
+                                this.setMargins(50)
+                                gravity = Gravity.CENTER
+                            }
+                    flo.size = FloatingActionButton.SIZE_MINI
+                    flo.compatElevation = 5f
+                    flo.supportBackgroundTintList = ColorStateList.valueOf(indicatorColor)
+                    flo.setImageDrawable(
+                        AppCompatDrawableManager.get().getDrawable(
+                            context,
+                            R.drawable.ic_down_arrow
+                        )
+                    )
+                    lin.addView(flo)
+                }
+
+                lin
+            }
+        } else LinearLayout(context)
     }
 
 }

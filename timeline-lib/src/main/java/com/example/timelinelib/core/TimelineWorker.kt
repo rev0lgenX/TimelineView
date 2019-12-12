@@ -5,6 +5,7 @@ import android.graphics.*
 import android.text.TextPaint
 import android.util.DisplayMetrics
 import android.view.MotionEvent
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.example.timelinelib.R
 import com.example.timelinelib.core.asset.TimelineAsset
@@ -103,6 +104,7 @@ class TimelineWorker(
         canvas?.drawRect(
             Rect(offset.x, offset.y, gutterWidth, height),
             Paint().apply {
+                setShadowLayer(8f,0f,0f, ContextCompat.getColor(context, R.color.gutterShadowColor))
                 color = attrs.gutterColor
             })
 
@@ -116,10 +118,11 @@ class TimelineWorker(
             5 * (context.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT) + gutterWidth
 
         startingTickMarkValue = y - (y % attrs.shortTickDistance)
+
         val endingTickMarkValue =
             startingTickMarkValue.plus(numTicks.times(attrs.shortTickDistance))
 
-        tickOffset = -((y % attrs.shortTickDistance) * currentScale) - smallScaleTickDistance + 30
+        tickOffset = -((y % attrs.shortTickDistance) * currentScale) - smallScaleTickDistance - 100
 
         var longTickCount = 0
 

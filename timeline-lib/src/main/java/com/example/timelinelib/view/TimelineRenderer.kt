@@ -508,7 +508,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
         timelineTracker.focalDistance = focus
         timelineTracker.focalPoint = p0.focusY.toDouble()
 
-        stopTimeline()
+        shouldStopTimeline()
 
         invalidate()
         return true
@@ -535,58 +535,67 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
     }
 
     private val yAnimationUpdate =
-        DynamicAnimation.OnAnimationUpdateListener { animation, newY, velocity ->
-            displaced = (newY - lastY).toDouble()
-            lastY = newY
-            timelineTracker.arbitraryStart -= displaced
+        if (!isInEditMode) {
+            DynamicAnimation.OnAnimationUpdateListener { animation, newY, velocity ->
+                displaced = (newY - lastY).toDouble()
+                lastY = newY
+                timelineTracker.arbitraryStart -= displaced
 
-            if (stopTimeline()) {
-                stopFlingAnimation()
+                if (shouldStopTimeline()) {
+                    stopFlingAnimation()
+                }
+
+                invalidate()
             }
+        } else null
 
-            invalidate()
-        }
-
-    private val ySpringAnimationUpdate = DynamicAnimation.OnAnimationUpdateListener { _, newY, _ ->
-        springDisplacement = newY.toDouble()
-        invalidate()
-    }
+    private val ySpringAnimationUpdate =
+        if(!isInEditMode){
+            DynamicAnimation.OnAnimationUpdateListener { _, newY, _ ->
+                springDisplacement = newY.toDouble()
+                invalidate()
+            }
+        }else null
 
     private val ySpringAnimationEnd =
-        DynamicAnimation.OnAnimationEndListener { animation, canceled, _, velocity ->
-            if (!canceled && velocity.absoluteValue > 0) {
-                startYAnimation(-velocity)
-            }
+        if(!isInEditMode){
+            DynamicAnimation.OnAnimationEndListener { animation, canceled, _, velocity ->
+                if (!canceled && velocity.absoluteValue > 0) {
+                    startYAnimation(-velocity)
+                }
 
-            if (canceled || !animation.isRunning()) {
-                springDisplacement = 0.0
-                lastY = 0f
-                displaced = 0.0
+                if (canceled || !animation.isRunning()) {
+                    springDisplacement = 0.0
+                    lastY = 0f
+                    displaced = 0.0
+                }
             }
-        }
+        }else null
 
 
     private val yAnimationEnd =
-        DynamicAnimation.OnAnimationEndListener { animation, canceled, _, velocity ->
-            if (!canceled && velocity.absoluteValue > 0) {
-                startYAnimation(-velocity)
-            }
+       if(!isInEditMode){
+           DynamicAnimation.OnAnimationEndListener { animation, canceled, _, velocity ->
+               if (!canceled && velocity.absoluteValue > 0) {
+                   startYAnimation(-velocity)
+               }
 
-            if (canceled || !animation.isRunning()) {
-                ySpring =
-                    createSpringAnimation(scrollY.toFloat(), displaced.div(2).toFloat()).apply {
-                        addUpdateListener(ySpringAnimationUpdate)
-                        addEndListener(ySpringAnimationEnd)
-                        start()
-                    }
+               if (canceled || !animation.isRunning()) {
+                   ySpring =
+                       createSpringAnimation(scrollY.toFloat(), displaced.div(2).toFloat()).apply {
+                           addUpdateListener(ySpringAnimationUpdate)
+                           addEndListener(ySpringAnimationEnd)
+                           start()
+                       }
 
-                lastY = 0f
-                displaced = 0.0
-                yFling = null
-                lastArbitraryStart = timelineTracker.arbitraryStart
-                showAssetAssistant()
-            }
-        }
+                   lastY = 0f
+                   displaced = 0.0
+                   yFling = null
+                   lastArbitraryStart = timelineTracker.arbitraryStart
+                   showAssetAssistant()
+               }
+           }
+       }else null
 
     private fun startYAnimation(vY: Float) {
         stopSpringAnimation()
@@ -616,11 +625,13 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
         }
     }
 
-    private fun stopTimeline(): Boolean {
+    private fun shouldStopTimeline(): Boolean {
         if (timelineTracker.arbitraryStart <= 0.0) {
             timelineTracker.arbitraryStart = 0.0
             return true
         }
+
+
         return false
     }
 
