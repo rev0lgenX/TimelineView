@@ -3,7 +3,7 @@ package com.example.timelinelib.core.util
 import android.content.Context
 import android.util.DisplayMetrics
 
-fun Context.convertDpToPixel(dp: Float): Float {
+fun Context.dp(dp: Float): Float {
     return dp * (resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)
 }
 

@@ -3,6 +3,7 @@ package com.example.timelinelib.core.asset
 import com.example.timelinelib.core.util.DateTime
 import com.example.timelinelib.exception.DateTimeException
 import org.threeten.bp.LocalDate
+import org.threeten.bp.temporal.ChronoUnit
 
 
 /**
@@ -14,25 +15,26 @@ import org.threeten.bp.LocalDate
 class TimelineEntry {
 
     /**
-    * beginning of timeline
+     * beginning of timeline
      */
     var startTime: DateTime? = DateTime(LocalDate.now())
         set(value) {
-            if(value == null) throw DateTimeException("DateTime Null")
+            if (value == null) throw DateTimeException("DateTime Null")
             field = value
             endTime = DateTime(value.localDate.plusYears(120))
         }
 
-    var birthTime:DateTime? = null
+    var birthTime: DateTime? = null
 
     /**
      * ending of timeline
-    */
-    //TODO:// need to check for stop infinite scrolling
+     */
+    //TODO:// need to check to stop infinite scrolling
     var endTime: DateTime? = null
+
 
     /**
      * container for all asset between specified start time and end time;
      */
-    var timelineAssets:List<TimelineAsset>? = null
+    var timelineAssets: List<TimelineAsset>? = null
 }

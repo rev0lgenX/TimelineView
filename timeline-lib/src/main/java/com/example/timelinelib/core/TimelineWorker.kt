@@ -11,7 +11,7 @@ import com.example.timelinelib.R
 import com.example.timelinelib.core.asset.TimelineAsset
 import com.example.timelinelib.core.asset.TimelineAssetLocation
 import com.example.timelinelib.core.util.TimelineAttrs
-import com.example.timelinelib.listener.OnAssetBehaviourListener
+import com.example.timelinelib.listener.OnTimelineBehaviourListener
 import com.example.timelinelib.listener.TickWorkerListener
 import kotlin.math.*
 
@@ -22,8 +22,8 @@ typealias AssetClickListener = ((TimelineAsset) -> Unit)?
 class TimelineWorker(
     var context: Context,
     tListener: TickWorkerListener?,
-    aListener: OnAssetBehaviourListener?,
-    var assetClickListener: AssetClickListener = null
+    aListener: OnTimelineBehaviourListener?,
+    private var assetClickListener: AssetClickListener = null
 ) {
 
     private val TAG = TimelineWorker::class.java.simpleName
@@ -32,7 +32,7 @@ class TimelineWorker(
     private val rectF = RectF()
 
     private val tickWorkerListener: TickWorkerListener? = tListener
-    private val assetBehaviourListener: OnAssetBehaviourListener? = aListener
+    private val timelineBehaviourListener: OnTimelineBehaviourListener? = aListener
 
     private val indicatorHeight = context.resources.getDimension(R.dimen.indicatorHeight)
     private val indicatorWidth = context.resources.getDimension(R.dimen.indicatorWidth)
@@ -104,7 +104,12 @@ class TimelineWorker(
         canvas?.drawRect(
             Rect(offset.x, offset.y, gutterWidth, height),
             Paint().apply {
-                setShadowLayer(8f,0f,0f, ContextCompat.getColor(context, R.color.gutterShadowColor))
+                setShadowLayer(
+                    8f,
+                    0f,
+                    0f,
+                    ContextCompat.getColor(context, R.color.gutterShadowColor)
+                )
                 color = attrs.gutterColor
             })
 
@@ -153,7 +158,7 @@ class TimelineWorker(
                         }
                     }
 
-                    if(asset.yearStartPosition!! > endingTickMarkValue){
+                    if (asset.yearStartPosition!! > endingTickMarkValue) {
                         assetBelowScreen?.let {
                             if (assetBelowScreen?.yearStartPosition?.minus(endingTickMarkValue)?.absoluteValue!! >
                                 asset.yearStartPosition?.minus(endingTickMarkValue)?.absoluteValue!!
@@ -212,7 +217,7 @@ class TimelineWorker(
                         }
                     }
 
-                    if(asset.monthStartPosition!! > endingTickMarkValue){
+                    if (asset.monthStartPosition!! > endingTickMarkValue) {
                         assetBelowScreen?.let {
                             if (assetBelowScreen?.monthStartPosition?.minus(endingTickMarkValue)?.absoluteValue!! >
                                 asset.monthStartPosition?.minus(endingTickMarkValue)?.absoluteValue!!
@@ -225,6 +230,7 @@ class TimelineWorker(
                     }
 
                 }
+
                 TimelineTracker.TimelineType.DAY -> {
                     asset.dayStartTracker =
                         asset.dayStartPosition?.minus(startingTickMarkValue)?.toInt()
@@ -255,7 +261,7 @@ class TimelineWorker(
                         }
                     }
 
-                    if(asset.dayStartPosition!! > endingTickMarkValue){
+                    if (asset.dayStartPosition!! > endingTickMarkValue) {
                         assetBelowScreen?.let {
                             if (assetBelowScreen?.dayStartPosition?.minus(endingTickMarkValue)?.absoluteValue!! >
                                 asset.dayStartPosition?.minus(endingTickMarkValue)?.absoluteValue!!
@@ -272,13 +278,12 @@ class TimelineWorker(
 
         }
 
+        var tt = 0.0
 
         for (i in 0 until numTicks) {
 
             tickOffset += smallScaleTickDistance
-
-            var tt = round(startingTickMarkValue)
-
+            tt = round(startingTickMarkValue)
             tt = -tt
 
             val o = floor(tickOffset)
@@ -304,8 +309,6 @@ class TimelineWorker(
                                     attrs
                                 )
                             }
-
-
                         }
 
                         TimelineTracker.TimelineType.MONTH -> {
@@ -340,9 +343,10 @@ class TimelineWorker(
             } else {
                 drawTick(canvas, attrs.shortTickSize, 2, attrs.tickColor, gutterWidth, o)
             }
-
             startingTickMarkValue += attrs.shortTickDistance
         }
+
+        tracker.arbitraryEnd = -tt
 
 
         when {
@@ -391,7 +395,7 @@ class TimelineWorker(
             }
         }
 
-        assetBehaviourListener?.onAssetVisible(visibleAssetLocation)
+        timelineBehaviourListener?.onAssetVisible(visibleAssetLocation)
 
     }
 
@@ -420,7 +424,7 @@ class TimelineWorker(
 
 
         visibleAssetLocation.forEach {
-            if(it.value.rectF.bottom > rectF.top){
+            if (it.value.rectF.bottom > rectF.top) {
                 return
             }
         }
@@ -483,6 +487,7 @@ class TimelineWorker(
             reset()
             textSize = attrs.timelineTextSize.toFloat()
             color = attrs.timelineTextColor
+            typeface = ResourcesCompat.getFont(context, R.font.open_sans_regular)
             canvas?.drawText(
                 timeText,
                 offset.x.toFloat() + attrs.gutterWidth - measureText(timeText) - attrs.shortTickSize,

@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.text.TextUtils
 import android.util.AttributeSet
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -16,12 +15,16 @@ import androidx.appcompat.widget.AppCompatDrawableManager
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.*
+import androidx.dynamicanimation.animation.DynamicAnimation
+import androidx.dynamicanimation.animation.SpringAnimation
+import androidx.dynamicanimation.animation.SpringForce
 import com.example.timelinelib.adapter.TimelineImageAdapter
 import com.example.timelinelib.core.asset.TimelineAssetLocation
 import com.example.timelinelib.core.asset.TimelineEntry
-import com.example.timelinelib.core.util.convertDpToPixel
-import com.example.timelinelib.listener.OnAssetBehaviourListener
+import com.example.timelinelib.core.util.dp
+import com.example.timelinelib.listener.OnTimelineBehaviourListener
 import com.example.timelinelib.listener.TimelineAssetClickListener
+import com.example.timelinelib.view.TimelineEndListener
 import com.example.timelinelib.view.TimelineRenderer
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
@@ -30,7 +33,7 @@ typealias OnAssetVisibleListener = ((MutableMap<Int, TimelineAssetLocation>) -> 
 
 class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int) :
     RelativeLayout(context, attributeSet, defStyle),
-    OnAssetBehaviourListener {
+    OnTimelineBehaviourListener {
 
     private val TAG = TimelineView::class.java.simpleName
 
@@ -40,15 +43,37 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
     private var assistantBottomPadding = 0
     private val indicatorColor = ContextCompat.getColor(context, R.color.indicatorColor)
     private val animationVisibleTime = 200L
-    private var childPosition = 0
     private var childImage: View? = null
+    private var assetBottomPosition = -100
+
+    private val imageHeight = context.dp(180f).toInt()
+
+    private lateinit var springAnimationX: SpringAnimation
+    private lateinit var springAnimationY: SpringAnimation
 
     private lateinit var relativeLayout1: RelativeLayout
 
+    /**
+     * adapter if you  want to use another loader for image
+     * TODO:// NOT TESTED
+     *
+     * */
     var timelineImageAdapter: TimelineImageAdapter? = null
 
+    /**
+     * listener which gives currently visible asset on the screen
+     * */
     var assetVisibleListener: OnAssetVisibleListener = null
 
+    /**
+     * listener which is invoked when timeline reaches endtime of TimelineEntryClass
+     * */
+    var timelineEndListener:TimelineEndListener = null
+
+
+    /**
+     * timelineEntry which contains all the assets
+     * */
     var timelineEntry: TimelineEntry? = null
         set(value) {
             field = value
@@ -62,10 +87,8 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         }
 
-
         attributeSet?.let {
             context.theme.obtainStyledAttributes(it, R.styleable.TimelineView, 0, 0).apply {
-
                 assistantTopPadding = getDimensionPixelSize(
                     R.styleable.TimelineView_assistantPaddingTop, 0
                 )
@@ -96,9 +119,10 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
             this.visibility = View.GONE
         })
 
-        tView.timelineAssetBehaviourListener = this
-
-
+        tView.timelineTimelineBehaviourListener = this
+        tView.timelineEndListener = {
+            timelineEndListener?.invoke(it)
+        }
     }
 
 
@@ -196,6 +220,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
 
     override fun onAssetVisible(assetLocation: MutableMap<Int, TimelineAssetLocation>) {
         val removableAssets = mutableListOf<Int>()
+
         currentVisibleAssets.forEach {
             if (!assetLocation.containsKey(it.key)) {
                 findViewById<View>(it.key)?.let {
@@ -214,66 +239,95 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
 
         //TODO: SOLVE OVERLAPPING IMAGES
 
-        assetLocation.forEach {
-            if (currentVisibleAssets.containsKey(it.key)) {
-                findViewById<View>(it.key)?.let { iv ->
-                    (iv.layoutParams as LayoutParams).topMargin = it.value.rectF.bottom.toInt() + 10
+        assetBottomPosition = -100
+
+        assetLocation.values.sortedBy { it.rectF.top }.forEach { currentAssetMap ->
+            val key = currentAssetMap.asset.id
+            val rectF = currentAssetMap.rectF
+            val assetView: View?
+
+            if (currentVisibleAssets.containsKey(key)) {
+                assetView = relativeLayout1.findViewById<View>(key)?.let { iv ->
+                    (iv.layoutParams as LayoutParams).topMargin =
+                        rectF.bottom.toInt() + 10
                     iv.requestLayout()
                     iv
                 }
 
             } else {
-                currentVisibleAssets[it.key] = it.value
+                currentVisibleAssets[key] = currentAssetMap
 
-                val imageLayout =
+                assetView =
                     timelineImageAdapter?.getImageContainer(
-                        it.value.asset.image ?: 0
+                        currentAssetMap.asset.image ?: 0
                     )?.let { vi ->
                         (vi.layoutParams as? LayoutParams)?.let { params ->
-                            params.topMargin = it.value.rectF.bottom.toInt() + 10
+                            params.topMargin = rectF.bottom.toInt() + 10
                             params.leftMargin = width - params.width
                         }
                         vi
                     } ?: let { _ ->
                         ImageView(context).let { iv ->
                             iv.layoutParams = LayoutParams(
-                                context.convertDpToPixel(200f).toInt(),
-                                context.convertDpToPixel(180f).toInt()
+                                context.dp(200f).toInt(),
+                                imageHeight
                             ).let { params ->
-                                params.topMargin = it.value.rectF.bottom.toInt()
+                                params.topMargin = rectF.bottom.toInt() + 10
                                 params.addRule(ALIGN_PARENT_END)
                                 params
                             }
                             iv.scaleType = ImageView.ScaleType.FIT_CENTER
-                            iv.id = it.value.asset.id
-                            it.value.asset.image?.let { iv.setImageResource(it) }
+                            iv.id = key
+                            currentAssetMap.asset.image?.let { iv.setImageResource(it) }
                             iv
                         }
                     }
 
-                imageLayout.alpha = 0f
-                relativeLayout1.addView(imageLayout)
+                assetView.alpha = 0f
+                relativeLayout1.addView(assetView)
 
-                childImage = imageLayout
-                ViewCompat.animate(imageLayout)
-                    .alpha(1f)
-                    .setDuration(100)
-                    .start()
-            }
-        }
+                childImage = assetView
 
-        childPosition = 0
 
-        assetLocation.values.sortedWith(compareBy { it.rectF.top }).forEach {
-            findViewById<View>(it.asset.id)?.let { vi ->
-                if (childPosition == 0) childPosition = vi.top
-                
-                if (vi.top < childPosition) {
-                    vi.visibility = View.GONE
+                if (key != 0) {
+                    ViewCompat.animate(assetView)
+                        .alpha(1f)
+                        .setDuration(100)
+                        .start()
                 } else {
-                    vi.visibility = View.VISIBLE
-                    childPosition = vi.bottom
+                    assetView.let { iv ->
+                        iv.scaleX = 0f
+                        iv.scaleY = 0f
+                        iv.alpha = 1f
+                        springAnimationX = createSpringAnimation(
+                            iv,
+                            SpringAnimation.SCALE_X,
+                            1f,
+                            SpringForce.STIFFNESS_MEDIUM,
+                            SpringForce.DAMPING_RATIO_HIGH_BOUNCY
+                        )
+
+                        springAnimationY = createSpringAnimation(
+                            iv,
+                            SpringAnimation.SCALE_Y,
+                            1f,
+                            SpringForce.STIFFNESS_MEDIUM,
+                            SpringForce.DAMPING_RATIO_HIGH_BOUNCY
+                        )
+
+                        springAnimationX.start()
+                        springAnimationY.start()
+                    }
+
                 }
+            }
+
+
+            if (assetView?.marginTop!! < assetBottomPosition) {
+                assetView.visibility = View.GONE
+            } else {
+                assetView.visibility = View.VISIBLE
+                assetBottomPosition = assetView.marginTop.plus(assetView.height)
             }
         }
 
@@ -352,7 +406,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                     textView.id = R.id.upAssistantTextViewId
                     textView.layoutParams =
                         LinearLayout.LayoutParams(
-                            context.convertDpToPixel(200f).toInt(),
+                            context.dp(200f).toInt(),
                             LayoutParams.WRAP_CONTENT
                         ).apply {
                             this.gravity = Gravity.CENTER
@@ -389,7 +443,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                     textView.id = R.id.downAssistantTextViewId
                     textView.layoutParams =
                         LinearLayout.LayoutParams(
-                            context.convertDpToPixel(200f).toInt(),
+                            context.dp(200f).toInt(),
                             LayoutParams.WRAP_CONTENT
                         ).apply {
                             this.gravity = Gravity.CENTER
@@ -430,6 +484,22 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                 lin
             }
         } else LinearLayout(context)
+    }
+
+
+    fun createSpringAnimation(
+        view: View,
+        property: DynamicAnimation.ViewProperty,
+        finalPosition: Float,
+        stiffness: Float,
+        dampingRatio: Float
+    ): SpringAnimation {
+        val animation = SpringAnimation(view, property)
+        val spring = SpringForce(finalPosition)
+        spring.stiffness = stiffness
+        spring.dampingRatio = dampingRatio
+        animation.spring = spring
+        return animation
     }
 
 }

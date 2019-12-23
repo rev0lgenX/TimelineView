@@ -25,16 +25,43 @@ class TimelineTracker {
 
     var timelineEntry: TimelineEntry? = null
         set(value) {
-            startTime = value?.startTime?.localDate!!
             field = value
+            startTime = value?.startTime?.localDate!!
+
+            if (value.endTime == null) return
+
+            timeEndPositionYear =
+                ChronoUnit.YEARS.between(
+                    value.startTime!!.localDate, value.endTime!!.localDate
+                ).times(attrs?.longTickDistance!!)
+                    .toInt()
+
+            timeEndPositionMonth =
+                ChronoUnit.MONTHS.between(
+                    value.startTime!!.localDate.withDayOfMonth(1),
+                    value.endTime!!.localDate.withDayOfMonth(1)
+                ).times(attrs?.longTickDistance!!)
+                    .toInt()
+
+            timeEndPositionDay = ChronoUnit.DAYS.between(
+                value.startTime!!.localDate,
+                value.endTime!!.localDate
+            ).times(attrs?.longTickDistance!!)
+                .toInt()
+
         }
 
     var timelineScaleType = TimelineType.YEAR        //tracking year month day hrs
-    var arbitraryStart = 0.0               //tracking for pixel
+    var arbitraryStart = 0.0               //tracking pixel
+    var arbitraryEnd = 0.0
     var focalDistance = 0.0
     var focalPoint = 0.0
 
-    var startTime: LocalDate? =null
+    var startTime: LocalDate? = null
+
+    var timeEndPositionYear: Int? = null
+    var timeEndPositionMonth: Int? = null
+    var timeEndPositionDay: Int? = null
 
 
     fun expandTimelineType() {
@@ -93,7 +120,10 @@ class TimelineTracker {
         startTime?.let {
             when (timelineScaleType) {
                 TimelineType.YEAR -> it.plusYears((i / attrs?.longTickDistance!!).toLong()).year.toString()
-                TimelineType.MONTH -> it.plusMonths((i / attrs?.longTickDistance!!).toLong())?.month?.name?.substring(0, 3)
+                TimelineType.MONTH -> it.plusMonths((i / attrs?.longTickDistance!!).toLong())?.month?.name?.substring(
+                    0,
+                    3
+                )
                 TimelineType.DAY -> it.plusDays((i / attrs?.longTickDistance!!).toLong())?.dayOfMonth?.toString()
             }
         }

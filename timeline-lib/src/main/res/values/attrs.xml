@@ -22,7 +22,12 @@
     </declare-styleable>
 
 
+    <item name="khaltiButtonIv" type="id"/>
+    <item name="progressBarId" type="id"/>
     <item name="upAssistantId" type="id"/>
+
+    <item name="verifyTv" type="id"/>
+    <item name="khaltiLayout" type="id"/>
 
     <item name="upAssistantLayoutId" type="id"/>
     <item name="upAssistantImageId" type="id"/>

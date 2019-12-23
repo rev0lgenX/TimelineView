@@ -9,6 +9,7 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
+import android.util.Log
 import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -24,16 +25,18 @@ import com.example.timelinelib.core.asset.TimelineAsset
 import com.example.timelinelib.core.asset.TimelineAssetLocation
 import com.example.timelinelib.core.asset.TimelineEntry
 import com.example.timelinelib.core.util.TimelineAttrs
-import com.example.timelinelib.listener.OnAssetBehaviourListener
+import com.example.timelinelib.listener.OnTimelineBehaviourListener
 import com.example.timelinelib.listener.TickWorkerListener
 import com.example.timelinelib.listener.TimelineAssetClickListener
 import org.threeten.bp.temporal.ChronoUnit
 import kotlin.math.absoluteValue
 
+typealias TimelineEndListener = ((Boolean) -> Unit)?
+
 class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: Int = 0) :
     View(context, attributeSet, defStyle)
     , TickWorkerListener
-    , OnAssetBehaviourListener
+    , OnTimelineBehaviourListener
     , GestureDetector.OnGestureListener
     , GestureDetector.OnDoubleTapListener
     , ScaleGestureDetector.OnScaleGestureListener {
@@ -41,7 +44,9 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
     private val TAG = TimelineRenderer::class.java.simpleName
 
     var timelineAssetClickListener: TimelineAssetClickListener? = null
-    var timelineAssetBehaviourListener: OnAssetBehaviourListener? = null
+    var timelineTimelineBehaviourListener: OnTimelineBehaviourListener? = null
+    var timelineEndListener: TimelineEndListener = null
+    private var oldArbitraryStartValue = 0.0
 
     val assetAboveScreen: TimelineAsset?
         get() {
@@ -74,37 +79,23 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
             timelineTracker.timelineEntry = value
 
             val textWidth = context.resources.getDimension(R.dimen.timelineTextWidth).toInt()
-
             value.timelineAssets?.forEach {
-
                 if (it.eventStartDate != null) {
                     it.yearStartPosition = ChronoUnit.YEARS.between(
                         value.startTime?.localDate, it.eventStartDate?.localDate
-                    ).let { diff ->
-                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
-//                            .toInt()
-                        diff.times(timelineAttrs?.longTickDistance!!)
-                            .toInt()
-                    }
+                    ).times(timelineAttrs?.longTickDistance!!)
+                        .toInt()
 
                     it.monthStartPosition = ChronoUnit.MONTHS.between(
                         value.startTime?.localDate?.withDayOfMonth(1),
                         it.eventStartDate?.localDate?.withDayOfMonth(1)
-                    ).let { diff ->
-                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
-//                            .toInt()
-                        diff.times(timelineAttrs?.longTickDistance!!)
-                            .toInt()
-                    }
+                    ).times(timelineAttrs?.longTickDistance!!)
+                        .toInt()
 
                     it.dayStartPosition = ChronoUnit.DAYS.between(
                         value.startTime?.localDate, it.eventStartDate?.localDate
-                    ).let { diff ->
-                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
-//                            .toInt()
-                        diff.times(timelineAttrs?.longTickDistance!!)
-                            .toInt()
-                    }
+                    ).times(timelineAttrs?.longTickDistance!!)
+                        .toInt()
 
                 }
 
@@ -112,30 +103,19 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
                     it.yearEndPosition = ChronoUnit.YEARS.between(
                         value.startTime?.localDate, it.eventEndDate?.localDate
-                    ).let { diff ->
-                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
-//                            .toInt()
-                        diff.times(timelineAttrs?.longTickDistance!!)
-                            .toInt()
-                    }
+                    ).times(timelineAttrs?.longTickDistance!!)
+                        .toInt()
 
                     it.monthEndPosition = ChronoUnit.MONTHS.between(
                         value.startTime?.localDate?.withDayOfMonth(1),
                         it.eventEndDate?.localDate?.withDayOfMonth(1)
-                    ).let { diff ->
-                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
-//                            .toInt()
-                        diff.times(timelineAttrs?.longTickDistance!!)
-                            .toInt()
-                    }
+                    ).times(timelineAttrs?.longTickDistance!!)
+                        .toInt()
+
                     it.dayEndPosition = ChronoUnit.DAYS.between(
                         value.startTime?.localDate, it.eventEndDate?.localDate
-                    ).let { diff ->
-                        //                        diff.plus(if (diff != 0L) 1 else 0).times(timelineAttrs?.longTickDistance!!)
-//                            .toInt()
-                        diff.times(timelineAttrs?.longTickDistance!!)
-                            .toInt()
-                    }
+                    ).times(timelineAttrs?.longTickDistance!!)
+                        .toInt()
                 }
 
 
@@ -386,16 +366,16 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
             return
         }
 
-        timelineAssetBehaviourListener?.showAssetAssistant()
+        timelineTimelineBehaviourListener?.showAssetAssistant()
     }
 
     override fun hideAssetAssistant() {
-        timelineAssetBehaviourListener?.hideAssetAssistant()
+        timelineTimelineBehaviourListener?.hideAssetAssistant()
     }
 
 
     override fun onAssetVisible(assetLocation: MutableMap<Int, TimelineAssetLocation>) {
-        timelineAssetBehaviourListener?.onAssetVisible(assetLocation)
+        timelineTimelineBehaviourListener?.onAssetVisible(assetLocation)
     }
 
 
@@ -464,10 +444,17 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
         val focalDiff = (p0?.y!! - p1?.y!!) / currentScale
 
+        oldArbitraryStartValue = timelineTracker.arbitraryStart
         timelineTracker.arbitraryStart = lastArbitraryStart + focalDiff
 
-        if (timelineTracker.arbitraryStart <= 0) {
-            timelineTracker.arbitraryStart = 0.0
+        shouldStopTopToDownScroll()
+
+        if (shouldStopDownToTopScroll()) {
+
+            if (timelineTracker.arbitraryStart > oldArbitraryStartValue) {
+                timelineTracker.arbitraryStart = oldArbitraryStartValue
+                Log.d(TAG, "stopped")
+            }
         }
 
         invalidate()
@@ -503,12 +490,22 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
         val focalDiff =
             (lastArbitraryStart + lastFocalPoint?.div(currentScale)?.toFloat()!!) - focus
 
+
+        oldArbitraryStartValue = timelineTracker.arbitraryStart
+
         timelineTracker.arbitraryStart =
             focus + (lastArbitraryStart - focus) / tempScale + focalDiff
+
         timelineTracker.focalDistance = focus
         timelineTracker.focalPoint = p0.focusY.toDouble()
 
-        shouldStopTimeline()
+        shouldStopTopToDownScroll()
+
+        if (shouldStopDownToTopScroll()) {
+            if (timelineTracker.arbitraryStart > oldArbitraryStartValue) {
+                timelineTracker.arbitraryStart = oldArbitraryStartValue
+            }
+        }
 
         invalidate()
         return true
@@ -541,7 +538,11 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                 lastY = newY
                 timelineTracker.arbitraryStart -= displaced
 
-                if (shouldStopTimeline()) {
+                if (shouldStopTopToDownScroll()) {
+                    stopFlingAnimation()
+                }
+
+                if (shouldStopDownToTopScroll()) {
                     stopFlingAnimation()
                 }
 
@@ -550,15 +551,15 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
         } else null
 
     private val ySpringAnimationUpdate =
-        if(!isInEditMode){
+        if (!isInEditMode) {
             DynamicAnimation.OnAnimationUpdateListener { _, newY, _ ->
                 springDisplacement = newY.toDouble()
                 invalidate()
             }
-        }else null
+        } else null
 
     private val ySpringAnimationEnd =
-        if(!isInEditMode){
+        if (!isInEditMode) {
             DynamicAnimation.OnAnimationEndListener { animation, canceled, _, velocity ->
                 if (!canceled && velocity.absoluteValue > 0) {
                     startYAnimation(-velocity)
@@ -570,32 +571,32 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                     displaced = 0.0
                 }
             }
-        }else null
+        } else null
 
 
     private val yAnimationEnd =
-       if(!isInEditMode){
-           DynamicAnimation.OnAnimationEndListener { animation, canceled, _, velocity ->
-               if (!canceled && velocity.absoluteValue > 0) {
-                   startYAnimation(-velocity)
-               }
+        if (!isInEditMode) {
+            DynamicAnimation.OnAnimationEndListener { animation, canceled, _, velocity ->
+                if (!canceled && velocity.absoluteValue > 0) {
+                    startYAnimation(-velocity)
+                }
 
-               if (canceled || !animation.isRunning()) {
-                   ySpring =
-                       createSpringAnimation(scrollY.toFloat(), displaced.div(2).toFloat()).apply {
-                           addUpdateListener(ySpringAnimationUpdate)
-                           addEndListener(ySpringAnimationEnd)
-                           start()
-                       }
+                if (canceled || !animation.isRunning()) {
+                    ySpring =
+                        createSpringAnimation(scrollY.toFloat(), displaced.div(2).toFloat()).apply {
+                            addUpdateListener(ySpringAnimationUpdate)
+                            addEndListener(ySpringAnimationEnd)
+                            start()
+                        }
 
-                   lastY = 0f
-                   displaced = 0.0
-                   yFling = null
-                   lastArbitraryStart = timelineTracker.arbitraryStart
-                   showAssetAssistant()
-               }
-           }
-       }else null
+                    lastY = 0f
+                    displaced = 0.0
+                    yFling = null
+                    lastArbitraryStart = timelineTracker.arbitraryStart
+                    showAssetAssistant()
+                }
+            }
+        } else null
 
     private fun startYAnimation(vY: Float) {
         stopSpringAnimation()
@@ -625,14 +626,19 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
         }
     }
 
-    private fun shouldStopTimeline(): Boolean {
-        if (timelineTracker.arbitraryStart <= 0.0) {
-            timelineTracker.arbitraryStart = 0.0
-            return true
+    private fun shouldStopTopToDownScroll() = if (timelineTracker.arbitraryStart <= 0.0) {
+        timelineTracker.arbitraryStart = 0.0
+        true
+    } else false
+
+    private fun shouldStopDownToTopScroll(): Boolean {
+        val endReached = when (timelineTracker.timelineScaleType) {
+            TimelineTracker.TimelineType.YEAR -> timelineTracker.arbitraryEnd >= timelineTracker.timeEndPositionYear!!
+            TimelineTracker.TimelineType.MONTH -> timelineTracker.arbitraryEnd >= timelineTracker.timeEndPositionMonth!!
+            TimelineTracker.TimelineType.DAY -> timelineTracker.arbitraryEnd >= timelineTracker.timeEndPositionDay!!
         }
-
-
-        return false
+        timelineEndListener?.invoke(endReached)
+        return endReached
     }
 
     private fun stopScaleAnimation() {
