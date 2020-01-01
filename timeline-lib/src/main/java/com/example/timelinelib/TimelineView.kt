@@ -205,7 +205,6 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
 
 
     override fun hideAssetAssistant() {
-
         handler.removeCallbacksAndMessages(null)
 
         findViewById<LinearLayout>(R.id.upAssistantLayoutId)?.let { upperAssis ->
