@@ -82,7 +82,8 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
             value.timelineAssets?.forEach {
                 if (it.eventStartDate != null) {
                     it.yearStartPosition = ChronoUnit.YEARS.between(
-                        value.startTime?.localDate, it.eventStartDate?.localDate
+                        value.startTime!!.localDate.withMonth(1),
+                        it.eventStartDate!!.localDate.withMonth(1)
                     ).times(timelineAttrs?.longTickDistance!!)
                         .toInt()
 
@@ -102,7 +103,8 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                 if (it.eventEndDate != null) {
 
                     it.yearEndPosition = ChronoUnit.YEARS.between(
-                        value.startTime?.localDate, it.eventEndDate?.localDate
+                        value.startTime!!.localDate.withMonth(1),
+                        it.eventEndDate!!.localDate.withMonth(1)
                     ).times(timelineAttrs?.longTickDistance!!)
                         .toInt()
 
@@ -167,9 +169,13 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                                         asset.yearEndPosition!!
                                     ).contains(subasset.yearStartPosition)
                                 ) {
-                                    subasset.paddingLeft += indicatorWidth
-                                        .plus(indicatorRadius.times(2))
-                                        .toInt()
+//                                    subasset.paddingLeft = indicatorWidth
+//                                        .plus(asset.paddingLeft)
+//                                        .plus(indicatorRadius.times(2))
+//                                        .toInt()
+
+                                    asset.childAssetsForPadding.add(subasset)
+                                    asset.updateChildAssetPadding(indicatorWidth, indicatorRadius.times(2))
                                 }
 
                                 if (IntRange(
@@ -193,16 +199,25 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                                         )
                                             .contains(asset.yearStartPosition)
                                     ) {
-                                        asset.paddingLeft += indicatorWidth
-                                            .plus(indicatorRadius.times(2))
-                                            .toInt()
+//                                        asset.paddingLeft = indicatorWidth
+//                                            .plus(subasset.paddingLeft)
+//                                            .plus(indicatorRadius.times(2))
+//                                            .toInt()
+
+                                        subasset.childAssetsForPadding.add(asset)
+                                        subasset.updateChildAssetPadding(indicatorWidth, indicatorRadius.times(2))
+
                                     }
                                 }
 
                                 if (asset.yearStartPosition == subasset.yearStartPosition) {
-                                    subasset.paddingLeft += indicatorWidth
-                                        .plus(indicatorRadius.times(2))
-                                        .toInt()
+//                                    subasset.paddingLeft = indicatorWidth
+//                                        .plus(asset.paddingLeft)
+//                                        .plus(indicatorRadius.times(2))
+//                                        .toInt()
+
+                                    asset.childAssetsForPadding.add(subasset)
+                                    asset.updateChildAssetPadding(indicatorWidth, indicatorRadius.times(2))
                                     subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.toInt()!!
                                 }
                             }

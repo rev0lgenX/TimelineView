@@ -8,7 +8,7 @@
     <dimen name="textSize">18sp</dimen>
     <dimen name="gutterWidth">45dp</dimen>
     <dimen name="indicatorHeight">20dp</dimen>
-    <dimen name="indicatorWidth">3dp</dimen>
+    <dimen name="indicatorWidth">2.2dp</dimen>
     <dimen name="indicatorPaddingLeft">8dp</dimen>
     <dimen name="indicatorTextSize">16sp</dimen>
     <dimen name="timelineTextWidth">200dp</dimen>

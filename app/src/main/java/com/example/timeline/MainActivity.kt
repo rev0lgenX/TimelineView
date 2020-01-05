@@ -9,7 +9,6 @@ import com.example.timelinelib.core.util.DateTime
 import com.example.timelinelib.listener.TimelineAssetClickListener
 import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.android.synthetic.main.activity_main.*
-import org.threeten.bp.LocalDate
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,86 +18,7 @@ class MainActivity : AppCompatActivity() {
 
         AndroidThreeTen.init(this)
 
-        val list = mutableListOf<TimelineAsset>()
-        list.add(
-            TimelineAsset(
-                list.size,
-                DateTime(
-                    2020, 12, 24
-                ),
-                null,
-                null,
-                "I am born. ",
-                Color.parseColor("#64dd17"),
-                image = android.R.drawable.ic_menu_report_image
-            )
-        )
-
-        list.add(
-            TimelineAsset(
-                list.size,
-
-                DateTime(2019, 12, 1),
-                DateTime(2022, 12, 1),
-                null,
-                "Something is cooking. You can see it yourself in the future",
-                Color.parseColor("#ff3d00"),
-                android.R.drawable.ic_menu_report_image
-            )
-        )
-
-        list.add(
-            TimelineAsset(
-                list.size,
-                DateTime(
-                    2026, 12, 1
-                ),
-                null,
-                null,
-                "I am noticed",
-                Color.parseColor("#f57f17"),
-                android.R.drawable.ic_menu_report_image
-            )
-        )
-
-        list.add(
-            TimelineAsset(
-                list.size,
-                DateTime(2045, 12, 24),
-                DateTime(2055, 4, 3),
-                null,
-                "This is the future mee I am the most successful app right now",
-                Color.parseColor("#455a64"),
-                android.R.drawable.ic_menu_report_image
-            )
-        )
-
-        list.add(
-            TimelineAsset(
-                list.size,
-                DateTime(2040, 5, 17),
-                DateTime(2050, 6, 16),
-                null,
-                "I am the one",
-                Color.parseColor("#9d46ff"),
-                android.R.drawable.ic_menu_report_image
-            )
-        )
-
-        list.add(
-            TimelineAsset(
-                list.size,
-                DateTime(2050, 8, 18),
-                DateTime(2055, 6, 16),
-                null,
-                "I am above all"
-            )
-        )
-
-        timelineView.timelineEntry =
-            TimelineEntry().apply {
-                timelineAssets = list
-            }
+        initDummy()
 
         timelineView.setOnAssetClickListener(object : TimelineAssetClickListener {
             override fun onAssetClick(asset: TimelineAsset) {
@@ -110,5 +30,127 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
+    private fun initDummy() {
+        var i = 0
+
+        timelineView.timelineEntry = TimelineEntry().apply {
+            birthTime = DateTime(1996, 12, 12)
+            startTime = DateTime(birthTime?.localDate?.minusYears(2)!!)
+            endTime = DateTime(startTime!!.localDate.plusYears(40))
+
+            timelineAssets = listOf(
+                TimelineAsset(
+                    i++,
+                    DateTime(birthTime?.years!!, birthTime?.months!!, birthTime?.days!!),
+                    null,
+                    "Birth",
+                    "Beginning of new life",
+                    Color.parseColor("#64dd17"),
+                    null
+                ),
+                TimelineAsset(
+                    i++,
+                    DateTime(2000, 12, 24),
+                    DateTime(2013, 4, 24),
+                    null,
+                    "Small health problem",
+                    Color.parseColor("#64dd17"),
+                    android.R.drawable.ic_menu_report_image
+                ),
+                TimelineAsset(
+                    i++,
+                    DateTime(2005, 4, 24),
+                    DateTime(2017, 12, 24),
+                    null,
+                    "Small Accident might occur ",
+                    Color.parseColor("#ff3d00"),
+                    android.R.drawable.ic_menu_report_image
+                ),
+                TimelineAsset(
+                    i++,
+                    DateTime(2002, 12, 24),
+                    DateTime(2004, 12, 24),
+                    null,
+                    "Successful in your study",
+                    Color.parseColor("#455a64"),
+                    android.R.drawable.ic_menu_report_image
+                ),
+                TimelineAsset(
+                    i++,
+                    DateTime(2003, 12, 24),
+                    DateTime(2016, 12, 24),
+                    null,
+                    "travel abroad",
+                    Color.parseColor("#f44336"),
+                    android.R.drawable.ic_menu_report_image
+                ),
+                TimelineAsset(
+                    i++,
+                    DateTime(2013, 12, 24),
+                    null,
+                    null,
+                    "Something will happen",
+                    Color.parseColor("#4a148c"),
+                    android.R.drawable.ic_menu_report_image
+                ),
+                TimelineAsset(
+                    i++,
+                    DateTime(2006, 12, 24),
+                    null,
+                    null,
+                    "Something will happen",
+                    Color.parseColor("#4a148c"),
+                    android.R.drawable.ic_menu_report_image
+                ),
+                TimelineAsset(
+                    i++,
+                    DateTime(2015, 12, 24),
+                    null,
+                    null,
+                    "Something will happen",
+                    Color.parseColor("#4a148c"),
+                    android.R.drawable.ic_menu_report_image
+                ),
+                TimelineAsset(
+                    i++,
+                    DateTime(2005, 12, 24),
+                    DateTime(2020, 12, 24),
+                    null,
+                    "Something will happen",
+                    Color.parseColor("#4a148c"),
+                    android.R.drawable.ic_menu_report_image
+                ),
+                TimelineAsset(
+                    i++,
+                    DateTime(2016, 12, 24),
+                    null,
+                    null,
+                    "Beginning of career",
+                    Color.parseColor("#9d46ff"),
+                    android.R.drawable.ic_menu_report_image
+                ),
+                TimelineAsset(
+                    i++,
+                    DateTime(2022, 12, 24),
+                    null,
+                    null,
+                    "You might find your future partner",
+                    Color.parseColor("#455a64"),
+                    android.R.drawable.ic_menu_report_image
+                ),
+                TimelineAsset(
+                    i++,
+                    DateTime(2010, 12, 24),
+                    null,
+                    null,
+                    "Something will happen",
+                    Color.parseColor("#4a148c"),
+                    android.R.drawable.ic_menu_report_image
+                )
+            )
+        }
+    }
+
 
 }

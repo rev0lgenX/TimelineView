@@ -2,8 +2,10 @@ package com.example.timelinelib.core
 
 import android.content.Context
 import android.graphics.*
+import android.os.Handler
 import android.text.TextPaint
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.MotionEvent
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -34,6 +36,7 @@ class TimelineWorker(
     private val tickWorkerListener: TickWorkerListener? = tListener
     private val timelineBehaviourListener: OnTimelineBehaviourListener? = aListener
 
+
     private val indicatorHeight = context.resources.getDimension(R.dimen.indicatorHeight)
     private val indicatorWidth = context.resources.getDimension(R.dimen.indicatorWidth)
     private val indicatorRadius = context.resources.getDimension(R.dimen.indicatorRadius)
@@ -42,10 +45,17 @@ class TimelineWorker(
 
     var assetAboveScreen: TimelineAsset? = null
     var assetBelowScreen: TimelineAsset? = null
+    private val handler:Handler = Handler()
+
+    private val checkIndicatorRunnable = Runnable {
+//        checkIndicatorLeftPadding(tracker)
+    }
 
 
     private val visibleAssetLocation = mutableMapOf<Int, TimelineAssetLocation>()
 
+    private fun removeIndicatorRunnable() = handler.removeCallbacks(checkIndicatorRunnable)
+    private fun checkIndicatorRunnable() = handler.postDelayed(checkIndicatorRunnable, 2000)
 
     fun onSingleTap(event: MotionEvent) {
         val x = event.x
@@ -141,15 +151,15 @@ class TimelineWorker(
             when (tracker.timelineScaleType) {
                 TimelineTracker.TimelineType.YEAR -> {
                     asset.yearStartTracker =
-                        asset.yearStartPosition?.minus(startingTickMarkValue)?.toInt()
+                        asset.yearStartPosition.minus(startingTickMarkValue).toInt()
 
                     asset.yearEndTracker =
-                        asset.yearEndPosition?.minus(startingTickMarkValue)?.toInt()
+                        asset.yearEndPosition.minus(startingTickMarkValue).toInt()
 
-                    if (asset.yearStartPosition!! < startingTickMarkValue) {
+                    if (asset.yearStartPosition < startingTickMarkValue) {
                         assetAboveScreen?.let {
                             if (assetAboveScreen?.yearStartPosition?.minus(startingTickMarkValue)?.absoluteValue!!
-                                > asset.yearStartPosition?.minus(startingTickMarkValue)?.absoluteValue!!
+                                > asset.yearStartPosition.minus(startingTickMarkValue)?.absoluteValue
                             ) {
                                 assetAboveScreen = asset
                             }
@@ -300,8 +310,8 @@ class TimelineWorker(
 
                             if (it.yearStartPosition?.toDouble() == abs(tt)) {
                                 drawTextAsset(
+                                    0,
                                     assetIndicatorRight,
-                                    context,
                                     it,
                                     o,
                                     springDisplacement,
@@ -314,8 +324,8 @@ class TimelineWorker(
                         TimelineTracker.TimelineType.MONTH -> {
                             if (it.monthStartPosition?.toDouble() == abs(tt)) {
                                 drawTextAsset(
+                                    1,
                                     assetIndicatorRight,
-                                    context,
                                     it,
                                     o,
                                     springDisplacement,
@@ -328,8 +338,8 @@ class TimelineWorker(
                         TimelineTracker.TimelineType.DAY -> {
                             if (it.dayStartPosition?.toDouble() == abs(tt)) {
                                 drawTextAsset(
+                                    2,
                                     assetIndicatorRight,
-                                    context,
                                     it,
                                     o,
                                     springDisplacement,
@@ -397,11 +407,25 @@ class TimelineWorker(
 
         timelineBehaviourListener?.onAssetVisible(visibleAssetLocation)
 
+//        checkIndicatorLeftPadding(tracker)
+    }
+
+
+    private fun checkIndicatorLeftPadding(tracker: TimelineTracker) {
+        tracker.timelineEntry!!.timelineAssets!!.forEach {
+            if(it.yearStartTracker > tracker.arbitraryStart && it.yearStartTracker < tracker.arbitraryEnd){
+                Log.d(TAG, it.description!! + "up inside " + tracker.arbitraryStart + " " + it.yearStartTracker)
+            }else if (it.yearEndTracker > tracker.arbitraryStart && it.yearEndTracker < tracker.arbitraryEnd){
+                Log.d(TAG, it.description!! + "down inside")
+            }else if(it.yearStartTracker < tracker.arbitraryStart && it.yearEndTracker > tracker.arbitraryEnd){
+                Log.d(TAG, it.description!! + "outside")
+            }
+        }
     }
 
     private fun drawTextAsset(
+        dateType: Int,
         assetIndicatorRight: Float,
-        context: Context,
         asset: TimelineAsset,
         o: Double,
         springDisplacement: Double,
@@ -411,16 +435,16 @@ class TimelineWorker(
         paint.reset()
 
         rectF.apply {
-            left = assetIndicatorRight + textPadding + asset.paddingLeft
-
+            left = assetIndicatorRight + textPadding + asset.paddingLeftTracker
             right = left + 2 * textPadding + asset.staticLayout?.width!!
             top =
                 ((o - textPadding - asset.staticLayout?.height?.div(2)!!).plus(springDisplacement)).plus(
-                    asset.paddingTop
+                    if (dateType == 0) asset.paddingTop else dateType
                 ).toFloat()
             bottom =
                 (top.plus(asset.staticLayout?.height!!).plus(springDisplacement).plus(2 * textPadding)).toFloat()
         }
+
 
 
         visibleAssetLocation.forEach {
@@ -462,8 +486,8 @@ class TimelineWorker(
                 bottom = endTime?.times(scale)?.toFloat()?.plus(tickOffset.toFloat())?.plus(
                     smallScaleTickDistance
                 )?.takeIf { it > top.plus(indicatorHeight) } ?: top
-                left = assetIndicatorLeft + asset.paddingLeft
-                right = assetIndicatorRight + asset.paddingLeft
+                left = assetIndicatorLeft + asset.paddingLeftTracker
+                right = assetIndicatorRight + asset.paddingLeftTracker
             }
 
             paint.color = backgroundColor
