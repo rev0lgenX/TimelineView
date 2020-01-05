@@ -27,7 +27,7 @@ class TimelineAsset(
     var dayEndPosition = 0
 
 
-    var yearStartTracker = 0
+    var yearStartTracker = 0 //in pixel
     var yearEndTracker = 0
 
 

@@ -45,10 +45,10 @@ class TimelineWorker(
 
     var assetAboveScreen: TimelineAsset? = null
     var assetBelowScreen: TimelineAsset? = null
-    private val handler:Handler = Handler()
+    private val handler: Handler = Handler()
 
     private val checkIndicatorRunnable = Runnable {
-//        checkIndicatorLeftPadding(tracker)
+        //        checkIndicatorLeftPadding(tracker)
     }
 
 
@@ -151,15 +151,18 @@ class TimelineWorker(
             when (tracker.timelineScaleType) {
                 TimelineTracker.TimelineType.YEAR -> {
                     asset.yearStartTracker =
-                        asset.yearStartPosition.minus(startingTickMarkValue).toInt()
+                        asset.yearStartPosition.minus(startingTickMarkValue)
+                            .times(currentScale)
+                            .plus(tickOffset).plus(smallScaleTickDistance).toInt()
 
                     asset.yearEndTracker =
-                        asset.yearEndPosition.minus(startingTickMarkValue).toInt()
+                        asset.yearEndPosition.minus(startingTickMarkValue).times(currentScale)
+                            .plus(tickOffset).plus(smallScaleTickDistance).toInt()
 
                     if (asset.yearStartPosition < startingTickMarkValue) {
                         assetAboveScreen?.let {
                             if (assetAboveScreen?.yearStartPosition?.minus(startingTickMarkValue)?.absoluteValue!!
-                                > asset.yearStartPosition.minus(startingTickMarkValue)?.absoluteValue
+                                > asset.yearStartPosition.minus(startingTickMarkValue).absoluteValue
                             ) {
                                 assetAboveScreen = asset
                             }
@@ -168,10 +171,10 @@ class TimelineWorker(
                         }
                     }
 
-                    if (asset.yearStartPosition!! > endingTickMarkValue) {
+                    if (asset.yearStartPosition > endingTickMarkValue) {
                         assetBelowScreen?.let {
                             if (assetBelowScreen?.yearStartPosition?.minus(endingTickMarkValue)?.absoluteValue!! >
-                                asset.yearStartPosition?.minus(endingTickMarkValue)?.absoluteValue!!
+                                asset.yearStartPosition.minus(endingTickMarkValue).absoluteValue
                             ) {
                                 assetBelowScreen = asset
                             }
@@ -197,9 +200,13 @@ class TimelineWorker(
 
                 TimelineTracker.TimelineType.MONTH -> {
                     asset.monthStartTracker =
-                        asset.monthStartPosition?.minus(startingTickMarkValue)?.toInt()
+                        asset.monthStartPosition.minus(startingTickMarkValue)
+                            .times(currentScale)
+                            .plus(tickOffset).plus(smallScaleTickDistance).toInt()
                     asset.monthEndTracker =
-                        asset.monthEndPosition?.minus(startingTickMarkValue)?.toInt()
+                        asset.monthEndPosition.minus(startingTickMarkValue)
+                            .times(currentScale)
+                            .plus(tickOffset).plus(smallScaleTickDistance).toInt()
 
                     indicator(
                         asset,
@@ -215,10 +222,10 @@ class TimelineWorker(
                     )
 
 
-                    if (asset.monthStartPosition!! < startingTickMarkValue) {
+                    if (asset.monthStartPosition < startingTickMarkValue) {
                         assetAboveScreen?.let {
                             if (assetAboveScreen?.monthStartPosition?.minus(startingTickMarkValue)?.absoluteValue!!
-                                > asset.monthStartPosition?.minus(startingTickMarkValue)?.absoluteValue!!
+                                > asset.monthStartPosition.minus(startingTickMarkValue).absoluteValue
                             ) {
                                 assetAboveScreen = asset
                             }
@@ -227,10 +234,10 @@ class TimelineWorker(
                         }
                     }
 
-                    if (asset.monthStartPosition!! > endingTickMarkValue) {
+                    if (asset.monthStartPosition > endingTickMarkValue) {
                         assetBelowScreen?.let {
                             if (assetBelowScreen?.monthStartPosition?.minus(endingTickMarkValue)?.absoluteValue!! >
-                                asset.monthStartPosition?.minus(endingTickMarkValue)?.absoluteValue!!
+                                asset.monthStartPosition.minus(endingTickMarkValue).absoluteValue
                             ) {
                                 assetBelowScreen = asset
                             }
@@ -243,9 +250,14 @@ class TimelineWorker(
 
                 TimelineTracker.TimelineType.DAY -> {
                     asset.dayStartTracker =
-                        asset.dayStartPosition?.minus(startingTickMarkValue)?.toInt()
+                        asset.dayStartPosition.minus(startingTickMarkValue)
+                            .times(currentScale)
+                            .plus(tickOffset).plus(smallScaleTickDistance).toInt()
+
                     asset.dayEndTracker =
-                        asset.dayEndPosition?.minus(startingTickMarkValue)?.toInt()
+                        asset.dayEndPosition.minus(startingTickMarkValue)
+                            .times(currentScale)
+                            .plus(tickOffset).plus(smallScaleTickDistance).toInt()
                     indicator(
                         asset,
                         asset.dayStartTracker,
@@ -259,10 +271,10 @@ class TimelineWorker(
                         smallScaleTickDistance.toFloat()
                     )
 
-                    if (asset.dayStartPosition!! < startingTickMarkValue) {
+                    if (asset.dayStartPosition < startingTickMarkValue) {
                         assetAboveScreen?.let {
                             if (assetAboveScreen?.dayStartPosition?.minus(startingTickMarkValue)?.absoluteValue!!
-                                > asset.dayStartPosition?.minus(startingTickMarkValue)?.absoluteValue!!
+                                > asset.dayStartPosition.minus(startingTickMarkValue).absoluteValue
                             ) {
                                 assetAboveScreen = asset
                             }
@@ -271,10 +283,10 @@ class TimelineWorker(
                         }
                     }
 
-                    if (asset.dayStartPosition!! > endingTickMarkValue) {
+                    if (asset.dayStartPosition > endingTickMarkValue) {
                         assetBelowScreen?.let {
                             if (assetBelowScreen?.dayStartPosition?.minus(endingTickMarkValue)?.absoluteValue!! >
-                                asset.dayStartPosition?.minus(endingTickMarkValue)?.absoluteValue!!
+                                asset.dayStartPosition.minus(endingTickMarkValue).absoluteValue
                             ) {
                                 assetBelowScreen = asset
                             }
@@ -308,7 +320,7 @@ class TimelineWorker(
 
                         TimelineTracker.TimelineType.YEAR -> {
 
-                            if (it.yearStartPosition?.toDouble() == abs(tt)) {
+                            if (it.yearStartPosition.toDouble() == abs(tt)) {
                                 drawTextAsset(
                                     0,
                                     assetIndicatorRight,
@@ -322,7 +334,7 @@ class TimelineWorker(
                         }
 
                         TimelineTracker.TimelineType.MONTH -> {
-                            if (it.monthStartPosition?.toDouble() == abs(tt)) {
+                            if (it.monthStartPosition.toDouble() == abs(tt)) {
                                 drawTextAsset(
                                     1,
                                     assetIndicatorRight,
@@ -336,7 +348,7 @@ class TimelineWorker(
                         }
 
                         TimelineTracker.TimelineType.DAY -> {
-                            if (it.dayStartPosition?.toDouble() == abs(tt)) {
+                            if (it.dayStartPosition.toDouble() == abs(tt)) {
                                 drawTextAsset(
                                     2,
                                     assetIndicatorRight,
@@ -407,17 +419,20 @@ class TimelineWorker(
 
         timelineBehaviourListener?.onAssetVisible(visibleAssetLocation)
 
-//        checkIndicatorLeftPadding(tracker)
+        checkIndicatorLeftPadding(height, scale, tracker)
     }
 
 
-    private fun checkIndicatorLeftPadding(tracker: TimelineTracker) {
+    private fun checkIndicatorLeftPadding(height: Int, scale: Double, tracker: TimelineTracker) {
         tracker.timelineEntry!!.timelineAssets!!.forEach {
-            if(it.yearStartTracker > tracker.arbitraryStart && it.yearStartTracker < tracker.arbitraryEnd){
-                Log.d(TAG, it.description!! + "up inside " + tracker.arbitraryStart + " " + it.yearStartTracker)
-            }else if (it.yearEndTracker > tracker.arbitraryStart && it.yearEndTracker < tracker.arbitraryEnd){
+            if (it.yearStartTracker.times(scale) > 0 && it.yearStartTracker.times(scale) < height) {
+                Log.d(
+                    TAG,
+                    it.description!! + "up inside " + height + " " + it.yearStartTracker.times(scale)
+                )
+            } else if (it.yearEndTracker.times(scale) > 0 && it.yearEndTracker.times(scale) < height) {
                 Log.d(TAG, it.description!! + "down inside")
-            }else if(it.yearStartTracker < tracker.arbitraryStart && it.yearEndTracker > tracker.arbitraryEnd){
+            } else if (it.yearStartTracker.times(scale) < 0 && it.yearEndTracker.times(scale) > height) {
                 Log.d(TAG, it.description!! + "outside")
             }
         }
@@ -482,10 +497,8 @@ class TimelineWorker(
     ) {
         startTime?.let { start ->
             rectF.apply {
-                top = start.times(scale).toFloat() + tickOffset.toFloat() + smallScaleTickDistance
-                bottom = endTime?.times(scale)?.toFloat()?.plus(tickOffset.toFloat())?.plus(
-                    smallScaleTickDistance
-                )?.takeIf { it > top.plus(indicatorHeight) } ?: top
+                top = start.toFloat()
+                bottom = endTime?.takeIf { it > top.plus(indicatorHeight) }?.toFloat() ?: top
                 left = assetIndicatorLeft + asset.paddingLeftTracker
                 right = assetIndicatorRight + asset.paddingLeftTracker
             }

@@ -175,7 +175,10 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 //                                        .toInt()
 
                                     asset.childAssetsForPadding.add(subasset)
-                                    asset.updateChildAssetPadding(indicatorWidth, indicatorRadius.times(2))
+                                    asset.updateChildAssetPadding(
+                                        indicatorWidth,
+                                        indicatorRadius.times(2)
+                                    )
                                 }
 
                                 if (IntRange(
@@ -205,7 +208,10 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 //                                            .toInt()
 
                                         subasset.childAssetsForPadding.add(asset)
-                                        subasset.updateChildAssetPadding(indicatorWidth, indicatorRadius.times(2))
+                                        subasset.updateChildAssetPadding(
+                                            indicatorWidth,
+                                            indicatorRadius.times(2)
+                                        )
 
                                     }
                                 }
@@ -217,7 +223,10 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 //                                        .toInt()
 
                                     asset.childAssetsForPadding.add(subasset)
-                                    asset.updateChildAssetPadding(indicatorWidth, indicatorRadius.times(2))
+                                    asset.updateChildAssetPadding(
+                                        indicatorWidth,
+                                        indicatorRadius.times(2)
+                                    )
                                     subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.toInt()!!
                                 }
                             }
@@ -682,19 +691,19 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                 TimelineTracker.TimelineType.YEAR -> {
                     scrollToAnimation = ValueAnimator.ofInt(
                         0,
-                        asset.yearStartTracker?.times(currentScale)?.minus(height / 2)?.toInt()!!
+                        asset.yearStartTracker.minus(height / 2)
                     )
                 }
                 TimelineTracker.TimelineType.MONTH -> {
                     scrollToAnimation = ValueAnimator.ofInt(
                         0,
-                        asset.monthStartTracker?.times(currentScale)?.minus(height / 2)?.toInt()!!
+                        asset.monthStartTracker.minus(height / 2)
                     )
                 }
                 TimelineTracker.TimelineType.DAY -> {
                     scrollToAnimation = ValueAnimator.ofInt(
                         0,
-                        asset.dayStartTracker?.times(currentScale)?.minus(height / 2)?.toInt()!!
+                        asset.dayStartTracker.minus(height / 2)
                     )
                 }
 
