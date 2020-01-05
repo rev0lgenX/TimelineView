@@ -7,6 +7,7 @@ import android.text.TextPaint
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.MotionEvent
+import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.example.timelinelib.R
@@ -42,6 +43,7 @@ class TimelineWorker(
     private val indicatorRadius = context.resources.getDimension(R.dimen.indicatorRadius)
     private val indicatorPaddingLeft = context.resources.getDimension(R.dimen.indicatorPaddingLeft)
     private val textPadding = context.resources.getDimension(R.dimen.textPadding)
+    private var view: View? = null
 
     var assetAboveScreen: TimelineAsset? = null
     var assetBelowScreen: TimelineAsset? = null
@@ -50,6 +52,8 @@ class TimelineWorker(
     private val checkIndicatorRunnable = Runnable {
         //        checkIndicatorLeftPadding(tracker)
     }
+
+    private val invalidate = view?.invalidate()
 
 
     private val visibleAssetLocation = mutableMapOf<Int, TimelineAssetLocation>()
@@ -70,7 +74,7 @@ class TimelineWorker(
     }
 
     fun work(
-        context: Context,
+        view: View,
         canvas: Canvas?,
         attrs: TimelineAttrs,
         height: Int,
@@ -80,6 +84,8 @@ class TimelineWorker(
         tracker: TimelineTracker
     ) {
         visibleAssetLocation.clear()
+        val context = view.context
+        this.view = view
         var currentScale = scale
         var smallScaleTickDistance = attrs.shortTickDistance * currentScale
 
@@ -137,7 +143,7 @@ class TimelineWorker(
         val endingTickMarkValue =
             startingTickMarkValue.plus(numTicks.times(attrs.shortTickDistance))
 
-        tickOffset = -((y % attrs.shortTickDistance) * currentScale) - smallScaleTickDistance - 100
+        tickOffset = -((y % attrs.shortTickDistance) * currentScale) - smallScaleTickDistance
 
         var longTickCount = 0
 
@@ -419,23 +425,35 @@ class TimelineWorker(
 
         timelineBehaviourListener?.onAssetVisible(visibleAssetLocation)
 
-        checkIndicatorLeftPadding(height, scale, tracker)
+//        checkIndicatorLeftPadding(height, tracker)
     }
 
 
-    private fun checkIndicatorLeftPadding(height: Int, scale: Double, tracker: TimelineTracker) {
+    private fun checkIndicatorLeftPadding(height: Int, tracker: TimelineTracker) {
         tracker.timelineEntry!!.timelineAssets!!.forEach {
-            if (it.yearStartTracker.times(scale) > 0 && it.yearStartTracker.times(scale) < height) {
-                Log.d(
-                    TAG,
-                    it.description!! + "up inside " + height + " " + it.yearStartTracker.times(scale)
-                )
-            } else if (it.yearEndTracker.times(scale) > 0 && it.yearEndTracker.times(scale) < height) {
-                Log.d(TAG, it.description!! + "down inside")
-            } else if (it.yearStartTracker.times(scale) < 0 && it.yearEndTracker.times(scale) > height) {
-                Log.d(TAG, it.description!! + "outside")
+            if (it.yearStartTracker in 1 until height) {
+                //show timeline
+                showTimelineIndicator(it)
+            } else if (it.yearEndTracker in 1 until height) {
+                //show timeline
+                showTimelineIndicator(it)
+            } else if (it.yearStartTracker < 0 && it.yearEndTracker > height) {
+                //hide timeline
+                hideTimelineIndicator(it)
             }
         }
+    }
+
+    private fun hideTimelineIndicator(asset: TimelineAsset) {
+        if (asset.totalChildSize() > 2) {
+            asset.hideChildPadding(asset.padding(context))
+            invalidate
+        }
+    }
+
+    private fun showTimelineIndicator(asset: TimelineAsset){
+        asset.showChildPadding()
+        invalidate
     }
 
     private fun drawTextAsset(
