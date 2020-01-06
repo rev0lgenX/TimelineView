@@ -21,7 +21,7 @@ import androidx.dynamicanimation.animation.SpringForce
 import com.example.timelinelib.adapter.TimelineImageAdapter
 import com.example.timelinelib.core.asset.TimelineAssetLocation
 import com.example.timelinelib.core.asset.TimelineEntry
-import com.example.timelinelib.core.util.dp
+import com.example.timelinelib.core.util.dip
 import com.example.timelinelib.listener.OnTimelineBehaviourListener
 import com.example.timelinelib.listener.TimelineAssetClickListener
 import com.example.timelinelib.view.TimelineEndListener
@@ -46,7 +46,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
     private var childImage: View? = null
     private var assetBottomPosition = -100
 
-    private val imageHeight = context.dp(180f).toInt()
+    private val imageHeight = context.dip(180f).toInt()
 
     private lateinit var springAnimationX: SpringAnimation
     private lateinit var springAnimationY: SpringAnimation
@@ -268,7 +268,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                     } ?: let { _ ->
                         ImageView(context).let { iv ->
                             iv.layoutParams = LayoutParams(
-                                context.dp(200f).toInt(),
+                                context.dip(200f).toInt(),
                                 imageHeight
                             ).let { params ->
                                 params.topMargin = rectF.bottom.toInt() + 10
@@ -405,7 +405,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                     textView.id = R.id.upAssistantTextViewId
                     textView.layoutParams =
                         LinearLayout.LayoutParams(
-                            context.dp(200f).toInt(),
+                            context.dip(200f).toInt(),
                             LayoutParams.WRAP_CONTENT
                         ).apply {
                             this.gravity = Gravity.CENTER
@@ -442,7 +442,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
                     textView.id = R.id.downAssistantTextViewId
                     textView.layoutParams =
                         LinearLayout.LayoutParams(
-                            context.dp(200f).toInt(),
+                            context.dip(200f).toInt(),
                             LayoutParams.WRAP_CONTENT
                         ).apply {
                             this.gravity = Gravity.CENTER

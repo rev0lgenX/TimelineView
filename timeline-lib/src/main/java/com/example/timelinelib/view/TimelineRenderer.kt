@@ -9,7 +9,6 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
-import android.util.Log
 import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -152,8 +151,6 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
             }
 
-            val indicatorWidth = context.resources.getDimension(R.dimen.indicatorWidth)
-            val indicatorRadius = context.resources.getDimension(R.dimen.indicatorRadius)
             val textPadding = context.resources.getDimension(R.dimen.textPadding)
 
             value.timelineAssets = value.timelineAssets?.sortedWith(compareBy { it.eventStartDate })
@@ -165,27 +162,24 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                         ?.forEach { subasset ->
                             if (asset.eventEndDate != null) {
                                 if (IntRange(
-                                        asset.yearStartPosition!!,
-                                        asset.yearEndPosition!!
+                                        asset.yearStartPosition,
+                                        asset.yearEndPosition
                                     ).contains(subasset.yearStartPosition)
                                 ) {
-//                                    subasset.paddingLeft = indicatorWidth
-//                                        .plus(asset.paddingLeft)
+//                                    subasset.paddingLeftTracker = indicatorWidth
+//                                        .plus(asset.paddingLeftTracker)
 //                                        .plus(indicatorRadius.times(2))
 //                                        .toInt()
 
                                     asset.childAssetsForPadding.add(subasset)
-                                    asset.updateChildAssetPadding(
-                                        indicatorWidth,
-                                        indicatorRadius.times(2)
-                                    )
+                                    asset.addChildAssetPadding(context)
                                 }
 
                                 if (IntRange(
-                                        asset.yearStartPosition!!,
-                                        asset.yearStartPosition?.plus(asset.staticLayout?.height!!)?.plus(
+                                        asset.yearStartPosition,
+                                        asset.yearStartPosition.plus(asset.staticLayout?.height!!).plus(
                                             2 * textPadding
-                                        )?.toInt()!!
+                                        ).toInt()
                                     )
                                         .contains(subasset.yearStartPosition)
                                 ) {
@@ -197,36 +191,30 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                             } else {
                                 if (subasset.eventEndDate != null) {
                                     if (IntRange(
-                                            subasset.yearStartPosition!!,
-                                            subasset.yearEndPosition!!
+                                            subasset.yearStartPosition,
+                                            subasset.yearEndPosition
                                         )
                                             .contains(asset.yearStartPosition)
                                     ) {
-//                                        asset.paddingLeft = indicatorWidth
-//                                            .plus(subasset.paddingLeft)
+//                                        asset.paddingLeftTracker = indicatorWidth
+//                                            .plus(subasset.paddingLeftTracker)
 //                                            .plus(indicatorRadius.times(2))
 //                                            .toInt()
 
                                         subasset.childAssetsForPadding.add(asset)
-                                        subasset.updateChildAssetPadding(
-                                            indicatorWidth,
-                                            indicatorRadius.times(2)
-                                        )
+                                        subasset.addChildAssetPadding(context)
 
                                     }
                                 }
 
                                 if (asset.yearStartPosition == subasset.yearStartPosition) {
-//                                    subasset.paddingLeft = indicatorWidth
-//                                        .plus(asset.paddingLeft)
+//                                    subasset.paddingLeftTracker = indicatorWidth
+//                                        .plus(asset.paddingLeftTracker)
 //                                        .plus(indicatorRadius.times(2))
 //                                        .toInt()
 
-                                    asset.childAssetsForPadding.add(subasset)
-                                    asset.updateChildAssetPadding(
-                                        indicatorWidth,
-                                        indicatorRadius.times(2)
-                                    )
+                                    subasset.childAssetsForPadding.add(asset)
+                                    asset.addChildAssetPadding(context)
                                     subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.toInt()!!
                                 }
                             }
@@ -356,7 +344,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         timelineWorker.work(
-            context,
+            this,
             canvas,
             timelineAttrs!!,
             height,
@@ -477,7 +465,6 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
             if (timelineTracker.arbitraryStart > oldArbitraryStartValue) {
                 timelineTracker.arbitraryStart = oldArbitraryStartValue
-                Log.d(TAG, "stopped")
             }
         }
 

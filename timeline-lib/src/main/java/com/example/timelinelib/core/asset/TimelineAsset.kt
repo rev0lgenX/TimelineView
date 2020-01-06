@@ -1,7 +1,10 @@
 package com.example.timelinelib.core.asset
 
+import android.content.Context
 import android.text.StaticLayout
+import android.util.Log
 import com.example.timelinelib.core.util.DateTime
+import com.example.timelinelib.core.util.dip
 
 //event holder
 class TimelineAsset(
@@ -14,6 +17,7 @@ class TimelineAsset(
     var image: Int? = null
 ) {
 
+    private val TAG: String = TimelineAsset::class.java.simpleName
     var eventStartDate: DateTime? = start
     var eventEndDate: DateTime? = end
     var staticLayout: StaticLayout? = null
@@ -35,7 +39,7 @@ class TimelineAsset(
     var monthEndTracker = 0
 
     var dayStartTracker = 0
-    var dayEndTracker =0
+    var dayEndTracker = 0
 
     var paddingLeft = 0
         set(value) {
@@ -43,15 +47,28 @@ class TimelineAsset(
             field = value
         }
 
+    var paddingLeftTracker = 0
     val childAssetsForPadding by lazy { mutableListOf<TimelineAsset>() }
 
+    fun totalChildSize() = childAssetsForPadding.distinctBy { it.paddingLeft }.size
 
-    fun updateChildAssetPadding(indicatorWidth: Float, times: Float) {
+    fun addChildAssetPadding(context: Context) {
         childAssetsForPadding.forEach { subasset ->
-            subasset.paddingLeft = indicatorWidth
-                .plus(paddingLeft)
-                .plus(times)
-                .toInt()
+            subasset.paddingLeft = paddingLeft.plus(padding(context))
+        }
+    }
+
+    fun padding(context: Context) = context.dip(2.2f).plus(context.dip(4).times(2))
+
+    fun hideChildPadding(padding:Int) {
+        childAssetsForPadding.forEach { subasset ->
+            subasset.paddingLeftTracker = subasset.paddingLeft - padding
+        }
+    }
+
+    fun showChildPadding() {
+        childAssetsForPadding.forEach { subasset ->
+            subasset.paddingLeftTracker = subasset.paddingLeft
         }
     }
 
@@ -59,5 +76,4 @@ class TimelineAsset(
     var paddingBottom: Int = 0
     var paddingTop: Int = 0
 
-    var paddingLeftTracker = 0
 }
