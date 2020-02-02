@@ -10,6 +10,7 @@ class DateTime(var years: Int, var months: Int, var days: Int) : Comparable<Date
         localDate = LocalDate.of(years, months, days)
     }
 
+    constructor() : this(LocalDate.now())
 
     constructor(localDate: LocalDate) : this(
         localDate.year,

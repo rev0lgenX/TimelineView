@@ -1,8 +1,8 @@
 package com.example.timelinelib.core.asset
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.text.StaticLayout
-import android.util.Log
 import com.example.timelinelib.core.util.DateTime
 import com.example.timelinelib.core.util.dip
 
@@ -42,15 +42,19 @@ class TimelineAsset(
     var dayEndTracker = 0
 
     var paddingLeft = 0
-        set(value) {
-            paddingLeftTracker = value
-            field = value
-        }
+//        set(value) {
+//            field = value
+//            paddingLeftTracker = value
+//        }
 
-    var paddingLeftTracker = 0
-    val childAssetsForPadding by lazy { mutableListOf<TimelineAsset>() }
+    var paddingLeftTrackerFrom = 0
+    val childAssetsForPadding = mutableListOf<TimelineAsset>()
 
-    fun totalChildSize() = childAssetsForPadding.distinctBy { it.paddingLeft }.size
+    fun reset() {
+        childAssetsForPadding.clear()
+        paddingTop = 0
+        paddingLeft = 0
+    }
 
     fun addChildAssetPadding(context: Context) {
         childAssetsForPadding.forEach { subasset ->
@@ -60,20 +64,6 @@ class TimelineAsset(
 
     fun padding(context: Context) = context.dip(2.2f).plus(context.dip(4).times(2))
 
-    fun hideChildPadding(padding:Int) {
-        childAssetsForPadding.forEach { subasset ->
-            subasset.paddingLeftTracker = subasset.paddingLeft - padding
-        }
-    }
-
-    fun showChildPadding() {
-        childAssetsForPadding.forEach { subasset ->
-            subasset.paddingLeftTracker = subasset.paddingLeft
-        }
-    }
-
-    var paddingRight: Int = 0
-    var paddingBottom: Int = 0
     var paddingTop: Int = 0
 
 }

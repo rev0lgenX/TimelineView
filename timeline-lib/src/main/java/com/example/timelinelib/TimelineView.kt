@@ -46,7 +46,7 @@ class TimelineView(context: Context, attributeSet: AttributeSet?, defStyle: Int)
     private var childImage: View? = null
     private var assetBottomPosition = -100
 
-    private val imageHeight = context.dip(180f).toInt()
+    private val imageHeight = context.dip(180f)
 
     private lateinit var springAnimationX: SpringAnimation
     private lateinit var springAnimationY: SpringAnimation

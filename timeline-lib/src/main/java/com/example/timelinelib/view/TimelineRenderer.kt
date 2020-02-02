@@ -151,76 +151,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
             }
 
-            val textPadding = context.resources.getDimension(R.dimen.textPadding)
-
             value.timelineAssets = value.timelineAssets?.sortedWith(compareBy { it.eventStartDate })
-
-            value.timelineAssets?.forEachIndexed { index, asset ->
-                val idx = index + 1
-                if (idx < value.timelineAssets?.size!!) {
-                    value.timelineAssets?.subList(idx, value.timelineAssets?.size!!)
-                        ?.forEach { subasset ->
-                            if (asset.eventEndDate != null) {
-                                if (IntRange(
-                                        asset.yearStartPosition,
-                                        asset.yearEndPosition
-                                    ).contains(subasset.yearStartPosition)
-                                ) {
-//                                    subasset.paddingLeftTracker = indicatorWidth
-//                                        .plus(asset.paddingLeftTracker)
-//                                        .plus(indicatorRadius.times(2))
-//                                        .toInt()
-
-                                    asset.childAssetsForPadding.add(subasset)
-                                    asset.addChildAssetPadding(context)
-                                }
-
-                                if (IntRange(
-                                        asset.yearStartPosition,
-                                        asset.yearStartPosition.plus(asset.staticLayout?.height!!).plus(
-                                            2 * textPadding
-                                        ).toInt()
-                                    )
-                                        .contains(subasset.yearStartPosition)
-                                ) {
-                                    subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.plus(
-                                        10
-                                    )?.toInt()!!
-                                }
-
-                            } else {
-                                if (subasset.eventEndDate != null) {
-                                    if (IntRange(
-                                            subasset.yearStartPosition,
-                                            subasset.yearEndPosition
-                                        )
-                                            .contains(asset.yearStartPosition)
-                                    ) {
-//                                        asset.paddingLeftTracker = indicatorWidth
-//                                            .plus(subasset.paddingLeftTracker)
-//                                            .plus(indicatorRadius.times(2))
-//                                            .toInt()
-
-                                        subasset.childAssetsForPadding.add(asset)
-                                        subasset.addChildAssetPadding(context)
-
-                                    }
-                                }
-
-                                if (asset.yearStartPosition == subasset.yearStartPosition) {
-//                                    subasset.paddingLeftTracker = indicatorWidth
-//                                        .plus(asset.paddingLeftTracker)
-//                                        .plus(indicatorRadius.times(2))
-//                                        .toInt()
-
-                                    subasset.childAssetsForPadding.add(asset)
-                                    asset.addChildAssetPadding(context)
-                                    subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.toInt()!!
-                                }
-                            }
-                        }
-                }
-            }
 
             invalidate()
         }
@@ -644,9 +575,9 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
 
     private fun shouldStopDownToTopScroll(): Boolean {
         val endReached = when (timelineTracker.timelineScaleType) {
-            TimelineTracker.TimelineType.YEAR -> timelineTracker.arbitraryEnd >= timelineTracker.timeEndPositionYear!!
-            TimelineTracker.TimelineType.MONTH -> timelineTracker.arbitraryEnd >= timelineTracker.timeEndPositionMonth!!
-            TimelineTracker.TimelineType.DAY -> timelineTracker.arbitraryEnd >= timelineTracker.timeEndPositionDay!!
+            TimelineTracker.TimelineType.YEAR -> timelineTracker.arbitraryEnd >= timelineTracker.timeEndPositionYear?:0
+            TimelineTracker.TimelineType.MONTH -> timelineTracker.arbitraryEnd >= timelineTracker.timeEndPositionMonth?:0
+            TimelineTracker.TimelineType.DAY -> timelineTracker.arbitraryEnd >= timelineTracker.timeEndPositionDay?:0
         }
         timelineEndListener?.invoke(endReached)
         return endReached

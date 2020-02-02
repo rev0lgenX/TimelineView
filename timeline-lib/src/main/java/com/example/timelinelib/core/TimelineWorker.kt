@@ -5,7 +5,6 @@ import android.graphics.*
 import android.os.Handler
 import android.text.TextPaint
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -49,17 +48,12 @@ class TimelineWorker(
     var assetBelowScreen: TimelineAsset? = null
     private val handler: Handler = Handler()
 
-    private val checkIndicatorRunnable = Runnable {
-        //        checkIndicatorLeftPadding(tracker)
-    }
 
     private val invalidate = view?.invalidate()
 
 
     private val visibleAssetLocation = mutableMapOf<Int, TimelineAssetLocation>()
-
-    private fun removeIndicatorRunnable() = handler.removeCallbacks(checkIndicatorRunnable)
-    private fun checkIndicatorRunnable() = handler.postDelayed(checkIndicatorRunnable, 2000)
+    private val visibleIndicator = mutableListOf<TimelineAsset>()
 
     fun onSingleTap(event: MotionEvent) {
         val x = event.x
@@ -150,10 +144,13 @@ class TimelineWorker(
         //reset value
         assetAboveScreen = null
         assetBelowScreen = null
+        visibleIndicator.clear()
 
+        tracker.timelineEntry?.timelineAssets?.forEach {
+            it.reset()
+        }
 
         tracker.timelineEntry?.timelineAssets?.forEach { asset ->
-            paint.reset()
             when (tracker.timelineScaleType) {
                 TimelineTracker.TimelineType.YEAR -> {
                     asset.yearStartTracker =
@@ -162,12 +159,13 @@ class TimelineWorker(
                             .plus(tickOffset).plus(smallScaleTickDistance).toInt()
 
                     asset.yearEndTracker =
-                        asset.yearEndPosition.minus(startingTickMarkValue).times(currentScale)
+                        asset.yearEndPosition.minus(startingTickMarkValue)
+                            .times(currentScale)
                             .plus(tickOffset).plus(smallScaleTickDistance).toInt()
 
                     if (asset.yearStartPosition < startingTickMarkValue) {
                         assetAboveScreen?.let {
-                            if (assetAboveScreen?.yearStartPosition?.minus(startingTickMarkValue)?.absoluteValue!!
+                            if (assetAboveScreen!!.yearStartPosition.minus(startingTickMarkValue).absoluteValue
                                 > asset.yearStartPosition.minus(startingTickMarkValue).absoluteValue
                             ) {
                                 assetAboveScreen = asset
@@ -179,7 +177,7 @@ class TimelineWorker(
 
                     if (asset.yearStartPosition > endingTickMarkValue) {
                         assetBelowScreen?.let {
-                            if (assetBelowScreen?.yearStartPosition?.minus(endingTickMarkValue)?.absoluteValue!! >
+                            if (assetBelowScreen!!.yearStartPosition.minus(endingTickMarkValue).absoluteValue >
                                 asset.yearStartPosition.minus(endingTickMarkValue).absoluteValue
                             ) {
                                 assetBelowScreen = asset
@@ -189,21 +187,14 @@ class TimelineWorker(
                         }
                     }
 
-                    indicator(
-                        asset,
-                        asset.yearStartTracker,
-                        asset.yearEndTracker,
-                        scale,
-                        tickOffset,
-                        assetIndicatorLeft,
-                        assetIndicatorRight,
-                        canvas,
-                        asset.backgroundColor ?: attrs.timelineTextBackgroundColor,
-                        smallScaleTickDistance.toFloat()
-                    )
+
+                    if (!((asset.yearStartPosition < startingTickMarkValue && asset.yearEndPosition < startingTickMarkValue)
+                                || (asset.yearStartPosition > endingTickMarkValue && asset.yearEndPosition > endingTickMarkValue))
+                    ) {
+                        visibleIndicator.add(asset)
+                    }
 
                 }
-
                 TimelineTracker.TimelineType.MONTH -> {
                     asset.monthStartTracker =
                         asset.monthStartPosition.minus(startingTickMarkValue)
@@ -214,23 +205,17 @@ class TimelineWorker(
                             .times(currentScale)
                             .plus(tickOffset).plus(smallScaleTickDistance).toInt()
 
-                    indicator(
-                        asset,
-                        asset.monthStartTracker,
-                        asset.monthEndTracker,
-                        scale,
-                        tickOffset,
-                        assetIndicatorLeft,
-                        assetIndicatorRight,
-                        canvas,
-                        asset.backgroundColor ?: attrs.timelineTextBackgroundColor,
-                        smallScaleTickDistance.toFloat()
-                    )
-
+                    if (!((asset.monthStartPosition < startingTickMarkValue && asset.monthEndPosition < startingTickMarkValue)
+                                || (asset.monthStartPosition > endingTickMarkValue && asset.monthEndPosition > endingTickMarkValue))
+                    ) {
+                        visibleIndicator.add(asset)
+                    }
 
                     if (asset.monthStartPosition < startingTickMarkValue) {
                         assetAboveScreen?.let {
-                            if (assetAboveScreen?.monthStartPosition?.minus(startingTickMarkValue)?.absoluteValue!!
+                            if (assetAboveScreen!!.monthStartPosition.minus(
+                                    startingTickMarkValue
+                                ).absoluteValue
                                 > asset.monthStartPosition.minus(startingTickMarkValue).absoluteValue
                             ) {
                                 assetAboveScreen = asset
@@ -242,7 +227,7 @@ class TimelineWorker(
 
                     if (asset.monthStartPosition > endingTickMarkValue) {
                         assetBelowScreen?.let {
-                            if (assetBelowScreen?.monthStartPosition?.minus(endingTickMarkValue)?.absoluteValue!! >
+                            if (assetBelowScreen!!.monthStartPosition.minus(endingTickMarkValue).absoluteValue >
                                 asset.monthStartPosition.minus(endingTickMarkValue).absoluteValue
                             ) {
                                 assetBelowScreen = asset
@@ -253,7 +238,6 @@ class TimelineWorker(
                     }
 
                 }
-
                 TimelineTracker.TimelineType.DAY -> {
                     asset.dayStartTracker =
                         asset.dayStartPosition.minus(startingTickMarkValue)
@@ -264,22 +248,18 @@ class TimelineWorker(
                         asset.dayEndPosition.minus(startingTickMarkValue)
                             .times(currentScale)
                             .plus(tickOffset).plus(smallScaleTickDistance).toInt()
-                    indicator(
-                        asset,
-                        asset.dayStartTracker,
-                        asset.dayEndTracker,
-                        scale,
-                        tickOffset,
-                        assetIndicatorLeft,
-                        assetIndicatorRight,
-                        canvas,
-                        asset.backgroundColor ?: attrs.timelineTextBackgroundColor,
-                        smallScaleTickDistance.toFloat()
-                    )
+
+
+                    if (!((asset.dayStartPosition < startingTickMarkValue && asset.dayEndPosition < startingTickMarkValue)
+                                || (asset.dayStartPosition > endingTickMarkValue && asset.dayEndPosition > endingTickMarkValue))
+                    ) {
+                        visibleIndicator.add(asset)
+                    }
+
 
                     if (asset.dayStartPosition < startingTickMarkValue) {
                         assetAboveScreen?.let {
-                            if (assetAboveScreen?.dayStartPosition?.minus(startingTickMarkValue)?.absoluteValue!!
+                            if (assetAboveScreen!!.dayStartPosition.minus(startingTickMarkValue).absoluteValue
                                 > asset.dayStartPosition.minus(startingTickMarkValue).absoluteValue
                             ) {
                                 assetAboveScreen = asset
@@ -291,7 +271,7 @@ class TimelineWorker(
 
                     if (asset.dayStartPosition > endingTickMarkValue) {
                         assetBelowScreen?.let {
-                            if (assetBelowScreen?.dayStartPosition?.minus(endingTickMarkValue)?.absoluteValue!! >
+                            if (assetBelowScreen!!.dayStartPosition.minus(endingTickMarkValue).absoluteValue >
                                 asset.dayStartPosition.minus(endingTickMarkValue).absoluteValue
                             ) {
                                 assetBelowScreen = asset
@@ -303,8 +283,9 @@ class TimelineWorker(
 
                 }
             }
-
         }
+
+        drawIndicator(canvas, tracker, assetIndicatorLeft, assetIndicatorRight, attrs)
 
         var tt = 0.0
 
@@ -328,7 +309,6 @@ class TimelineWorker(
 
                             if (it.yearStartPosition.toDouble() == abs(tt)) {
                                 drawTextAsset(
-                                    0,
                                     assetIndicatorRight,
                                     it,
                                     o,
@@ -342,7 +322,6 @@ class TimelineWorker(
                         TimelineTracker.TimelineType.MONTH -> {
                             if (it.monthStartPosition.toDouble() == abs(tt)) {
                                 drawTextAsset(
-                                    1,
                                     assetIndicatorRight,
                                     it,
                                     o,
@@ -356,7 +335,6 @@ class TimelineWorker(
                         TimelineTracker.TimelineType.DAY -> {
                             if (it.dayStartPosition.toDouble() == abs(tt)) {
                                 drawTextAsset(
-                                    2,
                                     assetIndicatorRight,
                                     it,
                                     o,
@@ -425,39 +403,9 @@ class TimelineWorker(
 
         timelineBehaviourListener?.onAssetVisible(visibleAssetLocation)
 
-//        checkIndicatorLeftPadding(height, tracker)
-    }
-
-
-    private fun checkIndicatorLeftPadding(height: Int, tracker: TimelineTracker) {
-        tracker.timelineEntry!!.timelineAssets!!.forEach {
-            if (it.yearStartTracker in 1 until height) {
-                //show timeline
-                showTimelineIndicator(it)
-            } else if (it.yearEndTracker in 1 until height) {
-                //show timeline
-                showTimelineIndicator(it)
-            } else if (it.yearStartTracker < 0 && it.yearEndTracker > height) {
-                //hide timeline
-                hideTimelineIndicator(it)
-            }
-        }
-    }
-
-    private fun hideTimelineIndicator(asset: TimelineAsset) {
-        if (asset.totalChildSize() > 2) {
-            asset.hideChildPadding(asset.padding(context))
-            invalidate
-        }
-    }
-
-    private fun showTimelineIndicator(asset: TimelineAsset){
-        asset.showChildPadding()
-        invalidate
     }
 
     private fun drawTextAsset(
-        dateType: Int,
         assetIndicatorRight: Float,
         asset: TimelineAsset,
         o: Double,
@@ -468,17 +416,17 @@ class TimelineWorker(
         paint.reset()
 
         rectF.apply {
-            left = assetIndicatorRight + textPadding + asset.paddingLeftTracker
+            left = assetIndicatorRight + textPadding + asset.paddingLeft
             right = left + 2 * textPadding + asset.staticLayout?.width!!
             top =
-                ((o - textPadding - asset.staticLayout?.height?.div(2)!!).plus(springDisplacement)).plus(
-                    if (dateType == 0) asset.paddingTop else dateType
+                ((o - textPadding - asset.staticLayout?.height?.div(2)!!).plus(
+                    springDisplacement
+                )).plus(
+                    asset.paddingTop
                 ).toFloat()
             bottom =
                 (top.plus(asset.staticLayout?.height!!).plus(springDisplacement).plus(2 * textPadding)).toFloat()
         }
-
-
 
         visibleAssetLocation.forEach {
             if (it.value.rectF.bottom > rectF.top) {
@@ -501,24 +449,224 @@ class TimelineWorker(
         canvas?.restore()
     }
 
+    private fun drawIndicator(
+        canvas: Canvas?,
+        tracker: TimelineTracker,
+        assetIndicatorLeft: Float,
+        assetIndicatorRight: Float,
+        attrs: TimelineAttrs
+    ) {
+        paint.reset()
+        visibleIndicator.forEachIndexed { index, asset ->
+            val idx = index + 1
+            if (idx < visibleIndicator.size) {
+                visibleIndicator.subList(idx, visibleIndicator.size).forEach { subasset ->
+                    if (asset.eventEndDate != null) {
+                        when (tracker.timelineScaleType) {
+                            TimelineTracker.TimelineType.YEAR -> {
+                                if (IntRange(
+                                        asset.yearStartPosition,
+                                        asset.yearEndPosition
+                                    ).contains(subasset.yearStartPosition)
+                                ) {
+                                    asset.childAssetsForPadding.add(subasset)
+                                    asset.addChildAssetPadding(context)
+                                }
+
+                                if (IntRange(
+                                        asset.yearStartPosition,
+                                        asset.yearStartPosition.plus(asset.staticLayout?.height!!).plus(
+                                            2 * textPadding
+                                        ).toInt()
+                                    )
+                                        .contains(subasset.yearStartPosition)
+                                ) {
+                                    subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.plus(
+                                        20
+                                    )?.toInt()!!
+                                }
+                            }
+                            TimelineTracker.TimelineType.MONTH -> {
+                                if (IntRange(
+                                        asset.monthStartPosition,
+                                        asset.monthEndPosition
+                                    ).contains(subasset.monthStartPosition)
+                                ) {
+                                    asset.childAssetsForPadding.add(subasset)
+                                    asset.addChildAssetPadding(context)
+                                }
+
+                                if (IntRange(
+                                        asset.monthStartPosition,
+                                        asset.monthStartPosition.plus(asset.staticLayout?.height!!).plus(
+                                            2 * textPadding
+                                        ).toInt()
+                                    )
+                                        .contains(subasset.monthStartPosition)
+                                ) {
+                                    subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.plus(
+                                        20
+                                    )?.toInt()!!
+                                }
+
+                            }
+                            TimelineTracker.TimelineType.DAY -> {
+                                if (IntRange(
+                                        asset.dayStartPosition,
+                                        asset.dayEndPosition
+                                    ).contains(subasset.dayStartPosition)
+                                ) {
+                                    asset.childAssetsForPadding.add(subasset)
+                                    asset.addChildAssetPadding(context)
+                                }
+
+                                if (IntRange(
+                                        asset.dayStartPosition,
+                                        asset.dayStartPosition.plus(asset.staticLayout?.height!!).plus(
+                                            2 * textPadding
+                                        ).toInt()
+                                    )
+                                        .contains(subasset.dayStartPosition)
+                                ) {
+                                    subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.plus(
+                                        20
+                                    )?.toInt()!!
+                                }
+
+                            }
+                        }
+
+                    } else {
+                        when (tracker.timelineScaleType) {
+                            TimelineTracker.TimelineType.YEAR -> {
+                                if (subasset.eventEndDate != null) {
+                                    if (IntRange(
+                                            subasset.yearStartPosition,
+                                            subasset.yearEndPosition
+                                        )
+                                            .contains(asset.yearStartPosition)
+                                    ) {
+                                        subasset.childAssetsForPadding.add(asset)
+                                        subasset.addChildAssetPadding(context)
+
+                                    }
+                                }
+
+                                if (asset.yearStartPosition == subasset.yearStartPosition) {
+                                    subasset.childAssetsForPadding.add(asset)
+                                    asset.addChildAssetPadding(context)
+                                    subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.plus(
+                                        20
+                                    )?.toInt()!!
+                                }
+                            }
+                            TimelineTracker.TimelineType.MONTH -> {
+                                if (subasset.eventEndDate != null) {
+                                    if (IntRange(
+                                            subasset.monthStartPosition,
+                                            subasset.monthEndPosition
+                                        )
+                                            .contains(asset.monthStartPosition)
+                                    ) {
+                                        subasset.childAssetsForPadding.add(asset)
+                                        subasset.addChildAssetPadding(context)
+
+                                    }
+                                }
+
+                                if (asset.monthStartPosition == subasset.monthStartPosition) {
+                                    subasset.childAssetsForPadding.add(asset)
+                                    asset.addChildAssetPadding(context)
+                                    subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.plus(
+                                        20
+                                    )?.toInt()!!
+                                }
+                            }
+                            TimelineTracker.TimelineType.DAY -> {
+                                if (subasset.eventEndDate != null) {
+                                    if (IntRange(
+                                            subasset.dayStartPosition,
+                                            subasset.dayEndPosition
+                                        )
+                                            .contains(asset.dayStartPosition)
+                                    ) {
+                                        subasset.childAssetsForPadding.add(asset)
+                                        subasset.addChildAssetPadding(context)
+
+                                    }
+                                }
+
+                                if (asset.dayStartPosition == subasset.dayStartPosition) {
+                                    subasset.childAssetsForPadding.add(asset)
+                                    asset.addChildAssetPadding(context)
+                                    subasset.paddingTop += asset.staticLayout?.height?.plus(2 * textPadding)?.plus(
+                                        20
+                                    )?.toInt()!!
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            when (tracker.timelineScaleType) {
+                TimelineTracker.TimelineType.YEAR -> {
+                    indicator(
+                        asset,
+                        asset.yearStartTracker,
+                        asset.yearEndTracker,
+                        assetIndicatorLeft,
+                        assetIndicatorRight,
+                        canvas,
+                        asset.backgroundColor ?: attrs.timelineTextBackgroundColor
+                    )
+                }
+                TimelineTracker.TimelineType.MONTH -> {
+                    indicator(
+                        asset,
+                        asset.monthStartTracker,
+                        asset.monthEndTracker,
+                        assetIndicatorLeft,
+                        assetIndicatorRight,
+                        canvas,
+                        asset.backgroundColor ?: attrs.timelineTextBackgroundColor
+                    )
+                }
+                TimelineTracker.TimelineType.DAY -> {
+                    indicator(
+                        asset,
+                        asset.dayStartTracker,
+                        asset.dayEndTracker,
+                        assetIndicatorLeft,
+                        assetIndicatorRight,
+                        canvas,
+                        asset.backgroundColor ?: attrs.timelineTextBackgroundColor
+                    )
+                }
+            }
+
+
+        }
+
+
+    }
+
     private fun indicator(
         asset: TimelineAsset,
         startTime: Int?,
         endTime: Int?,
-        scale: Double,
-        tickOffset: Double,
         assetIndicatorLeft: Float,
         assetIndicatorRight: Float,
         canvas: Canvas?,
-        backgroundColor: Int,
-        smallScaleTickDistance: Float
+        backgroundColor: Int
     ) {
         startTime?.let { start ->
             rectF.apply {
                 top = start.toFloat()
                 bottom = endTime?.takeIf { it > top.plus(indicatorHeight) }?.toFloat() ?: top
-                left = assetIndicatorLeft + asset.paddingLeftTracker
-                right = assetIndicatorRight + asset.paddingLeftTracker
+                left = assetIndicatorLeft + asset.paddingLeft
+                right = assetIndicatorRight + asset.paddingLeft
             }
 
             paint.color = backgroundColor
