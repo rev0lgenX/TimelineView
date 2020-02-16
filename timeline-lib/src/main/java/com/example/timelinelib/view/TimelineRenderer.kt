@@ -15,6 +15,7 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.GestureDetectorCompat
 import androidx.dynamicanimation.animation.*
 import com.example.timelinelib.R
@@ -78,6 +79,8 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
             timelineTracker.timelineEntry = value
 
             val textWidth = context.resources.getDimension(R.dimen.timelineTextWidth).toInt()
+
+            val typefaceOpenSans = ResourcesCompat.getFont(context, R.font.open_sans_regular)
             value.timelineAssets?.forEach {
                 if (it.eventStartDate != null) {
                     it.yearStartPosition = ChronoUnit.YEARS.between(
@@ -125,6 +128,7 @@ class TimelineRenderer(context: Context, attributeSet: AttributeSet?, defStyle: 
                     TextPaint().apply {
                         textSize = timelineAttrs?.textSize!!
                         color = timelineAttrs?.timelineTextColor!!
+                        typeface = typefaceOpenSans
                         val width = measureText(str)
 
                         it.staticLayout = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
